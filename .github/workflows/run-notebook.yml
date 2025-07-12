@@ -1,9 +1,13 @@
-name: Hello GitHub Actions
+# .github/workflows/triggered-by-slack.yml
+name: Slack-triggered workflow
 
-on: [push]
+on:
+  workflow_dispatch:
 
 jobs:
   say-hello:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Hello, Actions!"
+      - name: Say Hello
+        run: echo "Hello from Slack!"
+
