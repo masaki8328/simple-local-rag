@@ -1,4 +1,3 @@
-# .github/workflows/triggered-by-slack.yml
 name: Slack-triggered workflow
 
 on:
@@ -10,4 +9,14 @@ jobs:
     steps:
       - name: Say Hello
         run: echo "Hello from Slack!"
+
+      - name: Slack-inform
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "✅ GitHub Actions完了しました！"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
