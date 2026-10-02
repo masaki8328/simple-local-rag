@@ -1,0 +1,30 @@
+-- Explicit cross-case compound equivalence; no names-only linking.
+begin;
+create table public.compound_identity_links(id uuid primary key,project_id uuid not null,source_identity uuid not null,source_compound uuid not null,target_identity uuid not null,target_compound uuid not null,revision integer not null,decision text not null check(decision in ('include','exclude')),reason text not null,created_by uuid not null,created_at timestamptz not null default now(),unique(project_id,source_identity,source_compound,revision),foreign key(project_id,source_identity) references public.project_reaction_identities(project_id,id),foreign key(project_id,target_identity) references public.project_reaction_identities(project_id,id));
+alter table public.compound_identity_links enable row level security;
+revoke all on public.compound_identity_links from public,anon,authenticated,service_role;
+grant select on public.compound_identity_links to authenticated,kg_review_writer;
+grant insert on public.compound_identity_links to kg_review_writer;
+create policy owner_read on public.compound_identity_links for select to authenticated,kg_review_writer using(kg_private.has_role(project_id,array['owner']));
+create policy writer_insert on public.compound_identity_links for insert to kg_review_writer with check(created_by=kg_private.caller_uid() and kg_private.has_role(project_id,array['owner']));
+create trigger immutable_record before update or delete on public.compound_identity_links for each row execute function kg_private.reject_mutation();
+create trigger audit_change after insert on public.compound_identity_links for each row execute function kg_private.capture_audit();
+create function public.link_compound_identity(p_project uuid,p_id uuid,p_source_identity uuid,p_source_compound uuid,p_target_identity uuid,p_target_compound uuid,p_expected integer,p_decision text,p_reason text,p_attested boolean) returns uuid language plpgsql security definer set search_path='' as $$declare a jsonb;b jsonb;rev integer;old public.compound_identity_links;begin
+ perform kg_private.require_owner(p_project,true);perform pg_advisory_xact_lock(hashtextextended(p_source_identity::text||p_source_compound::text,24));
+ if p_attested is distinct from true or p_reason is null or length(btrim(p_reason)) not between 1 and 4000 or p_decision not in ('include','exclude') or p_source_identity=p_target_identity then raise exception 'KG_INVALID';end if;
+ select * into old from public.compound_identity_links where id=p_id;if found then if old.project_id<>p_project or old.source_identity<>p_source_identity or old.source_compound<>p_source_compound or old.target_identity<>p_target_identity or old.target_compound<>p_target_compound or old.decision<>p_decision or old.reason<>p_reason then raise exception 'KG_CONFLICT';end if;return old.id;end if;
+ select c into a from public.project_reaction_identities i,jsonb_array_elements(i.definition->'compounds')c where i.project_id=p_project and i.id=p_source_identity and c->>'id'=p_source_compound::text;
+ select c into b from public.project_reaction_identities i,jsonb_array_elements(i.definition->'compounds')c where i.project_id=p_project and i.id=p_target_identity and c->>'id'=p_target_compound::text;
+ if a is null or b is null then raise exception 'KG_FORBIDDEN';end if;
+ if (a-array['id','name','aliases','epistemic_status'])<>(b-array['id','name','aliases','epistemic_status']) then raise exception 'KG_MAPPING';end if;
+ select coalesce(max(revision),0) into rev from public.compound_identity_links where project_id=p_project and source_identity=p_source_identity and source_compound=p_source_compound;if rev is distinct from p_expected then raise exception 'KG_CONFLICT';end if;
+ insert into public.compound_identity_links values(p_id,p_project,p_source_identity,p_source_compound,p_target_identity,p_target_compound,rev+1,p_decision,p_reason,kg_private.caller_uid(),now());return p_id;
+end$$;
+revoke all on function public.link_compound_identity(uuid,uuid,uuid,uuid,uuid,uuid,integer,text,text,boolean) from public,anon,authenticated,service_role;
+grant execute on function public.link_compound_identity(uuid,uuid,uuid,uuid,uuid,uuid,integer,text,text,boolean) to authenticated;
+grant kg_review_writer to current_user with inherit false,set true;
+grant create on schema public to kg_review_writer;
+alter function public.link_compound_identity(uuid,uuid,uuid,uuid,uuid,uuid,integer,text,text,boolean) owner to kg_review_writer;
+revoke create on schema public from kg_review_writer;
+grant kg_review_writer to current_user with set false;
+commit;

@@ -10,7 +10,7 @@ This checklist bounds the MVP; later acquisition/provider features are not prere
 | Exact source provenance and corrections | Stored Drive receipt/hash, page/passage anchor, append-only human attestation | Human attestation is not automatic verification; exact-version retrieval still unproven |
 | Versioned staging protects human corrections | Manual versioned JSON staging/apply and immutable revisions | No Work transport or OpenAI API dependency configured |
 | Glucose/cellulose, NaOH concentration and temperature exploration | Whiteboard condition controls and separate identity nodes, tested with synthetic fixtures | Existing records need explicit structured condition labels; no automatic backfill |
-| One mobile graph workspace | Node search, pointer pan, zoom controls, source panel, oxygen group separation | Browser testing uses synthetic data, not a deployed integration |
+| One mobile graph workspace | Connected compound/junction topology, branching, shared intermediates, coproduct and explicit reverse paths; fit/pan/zoom/search/source panel locally verified | Synthetic desktop/mobile screenshots inspected; hosted validation pending |
 | Private PDF originals | Drive adapter, receipt bridge and recovery candidates | OAuth/persistent access approval and real upload/download validation pending; Supabase Storage superseded |
 | GitHub source only; Vercel hosting | Local source/build ready; no research data in this slice | No publication/activation authorized in this task |
 

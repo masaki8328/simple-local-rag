@@ -1,5 +1,7 @@
 # Condition-aware project whiteboard
 
+The initial visual layout documented here was superseded by the [connected topology correction](connected-topology.md); its stacked cards did not meet the branching-network acceptance requirement.
+
 Adds no schema, dependencies, provider calls or migrations. Reuses the existing project aggregation engine and review controls. Each reviewed reaction identity is laid out with all participants and an aggregate reaction connection. Nodes are keyed by identity, compound ID and participant occurrence, never by name. This is a bounded reaction hypergraph, not an inferred pathway or a name-based compound merge.
 
 Evidence is partitioned by its own experiment atmosphere, then individually matched against all selected conditions before aggregation. Oxygen/air, explicitly oxygen-free/inert, and unknown are separate groups. Filters never borrow conditions across experiments, stages or papers. Matched refutations remain with support; unknown records retain nodes and source access without inventing a proposal connection. Class selection happens before strength aggregation. Unaccepted scientific reviews may be inspected but cannot acquire support lines.

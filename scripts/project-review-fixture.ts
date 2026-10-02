@@ -42,8 +42,19 @@ select public.save_research_case(:'project',:'paper2',:'case2',1,jsonb_set((sele
 select pg_temp.err(format('select public.map_reaction_identity(%L,gen_random_uuid(),%L,%L,0,%L,%L,%L,true)',:'project',:'identity',:'revised','include','${JSON.stringify(payload(2).compounds.map((c,i)=>({source:c.id,target:payload(1).compounds[i].id})))}','SYNTHETIC'),'KG_MAPPING','stoichiometry change requires a different identity');
 select pg_temp.ok((select count(*)=0 from public.scientific_evidence_reviews where case_version_id=:'revised'),'new case revision does not inherit scientific approval');
 select pg_temp.err('insert into public.scientific_evidence_reviews default values','42501','client cannot insert forged review records directly');
+select public.create_reaction_identity(:'project',gen_random_uuid(),:'revised','SYNTHETIC second identity','SYNTHETIC explicit second definition',true) as identity2 \\gset
+select public.link_compound_identity(:'project',gen_random_uuid(),:'identity','80000000-0000-4000-8000-000000000001',:'identity2','90000000-0000-4000-8000-000000000001',0,'include','SYNTHETIC structural equivalence',true) as compound_link \\gset
+select pg_temp.ok((select count(*)=1 from public.compound_identity_links where project_id=:'project'),'explicit cross-case compound link stored');
+select pg_temp.ok(public.link_compound_identity(:'project',:'compound_link',:'identity','80000000-0000-4000-8000-000000000001',:'identity2','90000000-0000-4000-8000-000000000001',0,'include','SYNTHETIC structural equivalence',true)=:'compound_link','compound link retry idempotent');
+select pg_temp.err(format('select public.link_compound_identity(%L,gen_random_uuid(),%L,%L,%L,%L,0,%L,%L,true)',:'project',:'identity','80000000-0000-4000-8000-000000000001',:'identity2','90000000-0000-4000-8000-000000000001','include','SYNTHETIC'),'KG_CONFLICT','stale compound link refused');
+select pg_temp.err(format('select public.link_compound_identity(%L,gen_random_uuid(),%L,%L,%L,%L,1,%L,%L,true)',:'project',:'identity','80000000-0000-4000-8000-000000000001',:'identity2','90000000-0000-4000-8000-000000000002','include','SYNTHETIC'),'KG_MAPPING','free molecule and polymer site cannot link by name');
+select public.link_compound_identity(:'project',gen_random_uuid(),:'identity','80000000-0000-4000-8000-000000000001',:'identity2','90000000-0000-4000-8000-000000000001',1,'exclude','SYNTHETIC withdrawal',true);
+select pg_temp.ok((select count(*)=2 from public.compound_identity_links where project_id=:'project'),'withdrawal retains compound mapping history');
+select pg_temp.err('insert into public.compound_identity_links default values','42501','direct compound link forgery denied');
 select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',true);
 select pg_temp.ok((select count(*)=0 from public.project_reaction_identities where id=:'identity'),'project reaction identities are owner scoped');
 select pg_temp.err(format('select public.attest_source_locator(%L,gen_random_uuid(),%L,2,%L,%L,true)',:'project',:'anchor1','attested','SYNTHETIC'),'KG_FORBIDDEN','other owner cannot attest source');
+select pg_temp.ok((select count(*)=0 from public.compound_identity_links where project_id=:'project'),'compound links owner scoped');
+select pg_temp.err(format('select public.link_compound_identity(%L,gen_random_uuid(),%L,%L,%L,%L,2,%L,%L,true)',:'project',:'identity','80000000-0000-4000-8000-000000000001',:'identity2','90000000-0000-4000-8000-000000000001','include','SYNTHETIC'),'KG_FORBIDDEN','other owner cannot create compound link');
 rollback;
 `;process.stdout.write(sql);
