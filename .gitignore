@@ -24,3 +24,6 @@ analysis-output/
 # Local browser test output; never research exports
 playwright-report/
 test-results/
+
+# Local Supabase CLI metadata, never project credentials
+supabase/.temp/

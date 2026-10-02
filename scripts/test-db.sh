@@ -35,3 +35,9 @@ docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgre
 # has already lost its temporary writer SET bridge.
 docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres < tests/task2-workflow.sql
 python scripts/test-db-concurrency.py "$kg_container"
+
+# Task 3 uses an explicit Storage metadata/RLS shim, not a live Storage service.
+docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres < tests/storage-bootstrap.sql
+docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/migrations/20261002044143_private_pdf_acquisition.sql
+docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres < tests/task3-pdf.sql
+python scripts/test-pdf-concurrency.py "$kg_container"

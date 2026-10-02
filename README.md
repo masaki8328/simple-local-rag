@@ -33,3 +33,7 @@ The database still comprises only the C1 tables: projects, project_members, audi
 Do not commit research PDFs, private passages, exports, actual analysis JSON or credentials. `.gitignore` is a guardrail, not a content-inspection substitute. The historical tutorial PDF remains recoverable from Git history; it is absent from the current working tree. Do not rewrite history.
 
 Cleanup baseline: `71809f49637f5a43bd666ef9a17db962d1ad316b`. Work is isolated on `phase0/research-knowledge-graph`. Recover an old path with `git restore --source=71809f49637f5a43bd666ef9a17db962d1ad316b -- <exact-path>` (restoring README overwrites this new README). Seven original RAG files were removed/replaced under user authorization; `.gitignore` and the existing Slack workflow were retained. Task 2 is saved in a local-only commit after review. No push, PR, deployment or hosted migration is authorized.
+
+## Task 3 local PDF foundation
+
+The PDF queue, upload/recovery components, byte-verification service and private Storage policy candidate are available for local review. Production uploads remain disabled until a scoped verifier and bounded parser worker are reviewed/provisioned. See [Task 3 design and limits](docs/task3-pdf.md), [verification](docs/task3-verification.md) and the [root-reported hosted migration mapping](docs/hosted-migration-map.md). Do not reapply metadata migrations because local and connector-generated versions differ.
