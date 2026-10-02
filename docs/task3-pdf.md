@@ -1,5 +1,7 @@
 # Task 3 — private PDF acquisition, local review candidate
 
+> Superseded by the user-selected Google Drive architecture. Historical local results below remain a record, not an activation recommendation. The unapplied migration is preserved under supabase/superseded; see drive-adapter-plan.md.
+
 The local implementation includes a dedicated PDF-needed queue, paper-detail upload/recovery components, a server-only acquisition service, user-scoped Supabase repository/Storage adapters and an additive migration. Production upload/finalization deliberately returns UNCONFIGURED. A scoped verifier capability has not been provisioned or wired. This is a tested local foundation, not a working hosted upload feature.
 
 ## Lifecycle and scientific meaning

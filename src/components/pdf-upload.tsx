@@ -11,8 +11,8 @@ export function PDFUpload({projectId,paperId,enabled=false,maxBytes=MAX_PDF_BYTE
   setCompleted(true);setMessage(result.matchedKnownBytes?'既知の PDF と同じバイト列です。論文の同一性は自動判定しません。':'新しい PDF 版を保存・検証しました。再読み込みして確認できます。');
  }catch(error){const code=error instanceof Error?error.message:'STORAGE';setMessage(`${code}: ファイルと入力は保持されています。同じ試行を再送できます。別のファイルは新しい試行にしてください。`);}finally{locked.current=false;setBusy(false);xhr.current=null;}}
  async function cancel(){cancelRequested.current=true;xhr.current?.abort();if(busy&&!intent.current){setMessage('開始処理の完了後にキャンセルします。');return;}if(intent.current&&!completed){try{await call('cancel');}catch{setMessage('キャンセルの確定を確認できません。同じ試行の状態を確認してください。');return;}}intent.current=null;requestId.current=null;setProgress(0);setCompleted(false);setFile(null);if(fileInput.current)fileInput.current.value='';setMessage(completed?'別版を追加できます。確定済みの原本と出典は保持されています。':'試行をキャンセルしました。保存済みのオブジェクトは削除されません。');}
- return <section className="panel"><h2>PDF を追加</h2>{!enabled&&<p role="status">非公開 Storage と検証サービスの設定待ちです。アップロードはまだ利用できません。</p>}
- <p>最大 {Math.floor(maxBytes/1024/1024)} MiB。原本は上書きしません。別版は新しい試行として追加してください。</p>
+ return <section className="panel"><h2>PDF を追加</h2>{!enabled&&<p role="status">Google Drive 保存の接続待ちです。アップロードはまだ利用できません。</p>}
+ <p>{enabled?`最大 ${Math.floor(maxBytes/1024/1024)} MiB。`:'ファイル上限は Drive 接続時に確認します。'}原本は上書きしません。別版は新しい試行として追加してください。</p>
  <form onSubmit={e=>{e.preventDefault();void submit();}}><fieldset disabled={busy||!enabled||completed}>
  <label>PDF ファイル<input ref={fileInput} type="file" accept="application/pdf,.pdf" required disabled={!!intent.current} onChange={e=>{setFile(e.target.files?.[0]??null);requestId.current=null;}}/></label>
  <label>版のラベル<input value={edition} onChange={e=>setEdition(e.target.value)} required maxLength={200} disabled={!!intent.current}/></label>

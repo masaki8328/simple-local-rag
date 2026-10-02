@@ -1,0 +1,108 @@
+{
+  "schema_version": "research-case/0.1",
+  "project_id": "11111111-1111-4111-8111-111111111111",
+  "paper_id": "22222222-2222-4222-8222-222222222222",
+  "case_id": "33333333-3333-4333-8333-333333333333",
+  "expected_revision": 0,
+  "analysis_run": {
+    "id": "SYNTHETIC demonstration only",
+    "adapter": "dot_manual_json",
+    "protocol_version": "synthetic/1"
+  },
+  "payload": {
+    "compounds": [
+      {
+        "id": "40000000-0000-4000-8000-000000000001",
+        "name": "SYNTHETIC A",
+        "aliases": [
+          "SYNTHETIC alias"
+        ],
+        "node_type": "discrete_molecule",
+        "structure_context": "free",
+        "stereochemistry": null,
+        "protonation": null,
+        "formula": null,
+        "charge": null,
+        "epistemic_status": "unspecified"
+      },
+      {
+        "id": "40000000-0000-4000-8000-000000000002",
+        "name": "SYNTHETIC B",
+        "aliases": [],
+        "node_type": "polymer_site",
+        "structure_context": "bound",
+        "stereochemistry": null,
+        "protonation": null,
+        "formula": null,
+        "charge": null,
+        "epistemic_status": "hypothetical"
+      }
+    ],
+    "reaction": {
+      "id": "40000000-0000-4000-8000-000000000003",
+      "representation_scope": "net_conversion",
+      "equation_balance_status": "unchecked",
+      "product_inventory_status": "partial",
+      "participants": [
+        {
+          "compound_id": "40000000-0000-4000-8000-000000000001",
+          "role": "reactant",
+          "coefficient": null,
+          "primary_for_display": true
+        },
+        {
+          "compound_id": "40000000-0000-4000-8000-000000000002",
+          "role": "product",
+          "coefficient": null,
+          "primary_for_display": true
+        }
+      ]
+    },
+    "claim": {
+      "scope": "net_conversion",
+      "proposition": "SYNTHETIC conversion claim for tests only",
+      "asserted_by": "analyst"
+    },
+    "experiment": {
+      "id": "40000000-0000-4000-8000-000000000004",
+      "original_experiment_id": null,
+      "independence_group_id": null,
+      "origin_resolution_status": "unresolved",
+      "stage": "reaction",
+      "conditions": [
+        {
+          "key": "temperature",
+          "dimension": "temperature",
+          "basis": "reaction_medium",
+          "unit": "degC",
+          "value_state": "unknown",
+          "kind": "interval",
+          "lower": null,
+          "upper": null,
+          "lower_inclusive": true,
+          "upper_inclusive": true,
+          "terms": [],
+          "inventory_complete": false,
+          "raw_value_text": "not supplied in synthetic fixture",
+          "raw_unit": "",
+          "derivation": "reported",
+          "calculation": null
+        }
+      ]
+    },
+    "evidence": {
+      "id": "40000000-0000-4000-8000-000000000005",
+      "stance": "supports",
+      "evidence_type": "proposed",
+      "measured_scope": null,
+      "epistemic_origin": "analyst_inference",
+      "source_access": "unavailable",
+      "strength_rationale": "SYNTHETIC test proposal; no research fact",
+      "alternatives_tested": [],
+      "limitations": [
+        "SYNTHETIC fixture only"
+      ],
+      "source_anchor_id": null
+    }
+  }
+}

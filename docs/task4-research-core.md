@@ -1,0 +1,31 @@
+# Task 4 bounded research core — draft-only checkpoint
+
+The active candidate adds one paper-linked research case per edit/import. A case contains 2–8 distinct compounds, one reaction with 2–16 participants, one scoped claim, one experiment with one stage's typed conditions, and one evidence assertion. It is intentionally not the full C2/D model. Cross-case entity reuse/merging, adopted-origin resolution, full graph/search/RQ, observations/material properties, provider ingestion and source verification are deferred.
+
+## Data and scientific boundaries
+
+Stable compounds, reactions, experiments and evidence have separate immutable version tables/current pointers. Reaction participants pin compound versions and the same case snapshot through composite FKs. Claims and condition sets are separate immutable records pinned to reaction/experiment versions. Every scientific row carries project_id. Case ancestry is within the same case; entity-version ancestry is within the same stable entity. Alias labels are versioned with compound context and never used for identity merging. Free/bound/polymer-site/unknown context, stereochemistry, protonation, formula/charge unknowns and epistemic status remain distinct.
+
+A case snapshot is the editing aggregate, not a chemical identity merge. Removing a participant/compound from a new snapshot preserves prior versions; current UI resolves membership from that snapshot. Stable identities are scoped to one case in this first profile; importing the same stable ID into another case conflicts. The versions of unchanged child records are copied into each new snapshot to keep one small atomic provenance path. Claims/conditions connect through the case's immutable ancestry rather than supporting independent cross-case revision workflows yet.
+
+Payload conditions preserve dimension/basis, raw values/units, range endpoints/inclusivity, unknown states, categorical/composition inventory and calculation provenance. The whole bundle belongs to a single experiment/stage. Duplicate keys remain unresolved for filtering, as in the existing classifier. Net conversion cannot stand for an elementary-mechanism claim; directly-observed measured scope must match; strong support requires alternatives and limitations. Stance, evidence class, author-versus-analyst attribution, original experiment/group declarations, access and human review are separate axes. Declared origin fields are not a new global independence resolver.
+
+**All persisted confirmations are constrained to draft.** Human creation is unreviewed; manual revisions are human_corrected; the explicit saved-content review action records human_reviewed with server-derived reviewer/time. None verifies source pages or upgrades evidence strength. AI import always records ai_generated and cannot submit reviewer/confirmation/actor fields. The current graph projection gate rejects drafts/unverified sources; the existing synthetic classifier is reused behind that gate, not replaced. No actual research graph is enabled.
+
+Source anchors are optional internal references. If supplied, SQL requires the same project and reporting paper via its immutable document link. Missing/impossible references cannot become confirmed provenance. This checkpoint does not create or mark anchors verified. The inherited C1 source bridge still needs the forthcoming provider-neutral Drive receipt/analysis migration; it does not justify permanently requiring bucket/path. No Task 3 Storage migration is a prerequisite for this core.
+
+## Revision and import workflow
+
+`research-case/0.1` is a NEW bounded JSON profile, not a silent reinterpretation of analysis-v0.1. The strict generated schema and TypeScript semantics are accompanied by server-side SQL shape/semantic validation. Only interval/controlled-term/composition conditions are supported; unsupported structures must remain upstream, not be coerced. Payload/run metadata use a 128 KiB limit. The synthetic example is clearly labelled and must have target IDs adapted before staging.
+
+Owner-scoped DAL operations validate user/project/paper independently; user-cookie Supabase clients call narrow RPCs, never service-role CRUD. The writer uses private caller_uid, no auth-schema grants, no LOGIN/BYPASSRLS/table ownership. Temporary SET/CREATE required for five function ownership transfers is removed before commit. Direct client mutations are revoked; owner RLS applies to reads and the restricted writer.
+
+Save appends a case revision plus normalized child versions in one transaction. Expected revision and project serialization prevent stale/concurrent edits. Archive/restore advances the case generation and is audited without deleting science. Version numbers may have gaps after archive metadata changes. Historical support/refutation versions remain available.
+
+Stage stores exact raw JSON, content hash, schema/run metadata and proposal under a scoped idempotency key. Preview displays scientific section diffs and flags stale bases/human protection. Apply revalidates and writes all scientific rows/audit/batch result atomically. Same key/different bytes conflicts; repeated apply returns the original result without overwriting later versions. Human-authored, corrected or reviewed records cannot be automatically replaced by import; a person must resolve changes through manual edits. Concurrent apply and stale edits are tested separately.
+
+## UI and limits
+
+Paper detail links to a case list, a structured editor, historical versions and an import preview/apply panel. The editor exposes context, participants, claim/attribution, typed conditions, evidence/limitations and optional anchor ID. Source-anchor selection and source inspection are deliberately not represented as completed while Drive/analysis are unavailable. Review of unsaved editor content is disabled; failed save retains the draft. The UI is a small owner-only vertical slice, not a bulk chemistry editor.
+
+The superseded PDF controls explain Drive connection is pending. No OAuth client, credential, folder access, upload transport, inline viewer or receipt migration was created. See drive-adapter-plan.md before the next implementation slice and hosted-migration-map.md before any future CLI push. This checkpoint stops for PM review; no live schema application is authorized here.

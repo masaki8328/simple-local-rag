@@ -1,5 +1,7 @@
 # Task 3 verification handoff
 
+> Superseded by the user-selected Google Drive architecture. Historical local results below remain a record, not an activation recommendation. The unapplied migration is preserved under supabase/superseded; see drive-adapter-plan.md.
+
 Status: independently reviewed local foundation, production upload/finalization disabled. No Task 3 migration, Storage bucket, worker credential or user account was created remotely by this executor. No Git push, PR, deployment, email, research PDF or private passage was used.
 
 ## Deliverables

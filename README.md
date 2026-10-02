@@ -37,3 +37,7 @@ Cleanup baseline: `71809f49637f5a43bd666ef9a17db962d1ad316b`. Work is isolated o
 ## Task 3 local PDF foundation
 
 The PDF queue, upload/recovery components, byte-verification service and private Storage policy candidate are available for local review. Production uploads remain disabled until a scoped verifier and bounded parser worker are reviewed/provisioned. See [Task 3 design and limits](docs/task3-pdf.md), [verification](docs/task3-verification.md) and the [root-reported hosted migration mapping](docs/hosted-migration-map.md). Do not reapply metadata migrations because local and connector-generated versions differ.
+
+## Task 4 draft research core and Drive decision
+
+The bounded paper → compounds/reaction → experiment conditions → evidence path includes immutable revisions and staged JSON preview/apply. Source confirmation remains disabled. See [research core](docs/task4-research-core.md) and [the accepted Drive adapter plan](docs/drive-adapter-plan.md). Google Drive will hold PDF originals; Supabase Storage Task 3 is superseded and its unapplied SQL is outside the active migration directory. No app OAuth or Drive upload is configured.

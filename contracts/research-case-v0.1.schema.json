@@ -1,0 +1,603 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "research-case/0.1"
+    },
+    "project_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "paper_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "expected_revision": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "analysis_run": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "pattern": "\\S"
+        },
+        "adapter": {
+          "type": "string",
+          "const": "dot_manual_json"
+        },
+        "protocol_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "pattern": "\\S"
+        }
+      },
+      "required": [
+        "id",
+        "adapter",
+        "protocol_version"
+      ],
+      "additionalProperties": false
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "compounds": {
+          "minItems": 2,
+          "maxItems": 8,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "pattern": "\\S"
+              },
+              "aliases": {
+                "maxItems": 8,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "pattern": "\\S"
+                }
+              },
+              "node_type": {
+                "type": "string",
+                "enum": [
+                  "discrete_molecule",
+                  "intermediate",
+                  "polymer",
+                  "polymer_site",
+                  "mixture",
+                  "class"
+                ]
+              },
+              "structure_context": {
+                "type": "string",
+                "enum": [
+                  "free",
+                  "bound",
+                  "polymer_site",
+                  "unknown"
+                ]
+              },
+              "stereochemistry": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "protonation": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "formula": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "charge": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "epistemic_status": {
+                "type": "string",
+                "enum": [
+                  "observed",
+                  "hypothetical",
+                  "unspecified"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "aliases",
+              "node_type",
+              "structure_context",
+              "stereochemistry",
+              "protonation",
+              "formula",
+              "charge",
+              "epistemic_status"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "reaction": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "representation_scope": {
+              "type": "string",
+              "enum": [
+                "net_conversion",
+                "elementary_step",
+                "pathway_segment"
+              ]
+            },
+            "equation_balance_status": {
+              "type": "string",
+              "enum": [
+                "checked",
+                "unchecked",
+                "not_applicable",
+                "unknown"
+              ]
+            },
+            "product_inventory_status": {
+              "type": "string",
+              "enum": [
+                "complete",
+                "partial",
+                "unknown"
+              ]
+            },
+            "participants": {
+              "minItems": 2,
+              "maxItems": 16,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "compound_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "reactant",
+                      "product",
+                      "formal_auxiliary"
+                    ]
+                  },
+                  "coefficient": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 1000000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "primary_for_display": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "compound_id",
+                  "role",
+                  "coefficient",
+                  "primary_for_display"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "id",
+            "representation_scope",
+            "equation_balance_status",
+            "product_inventory_status",
+            "participants"
+          ],
+          "additionalProperties": false
+        },
+        "claim": {
+          "type": "object",
+          "properties": {
+            "scope": {
+              "type": "string",
+              "enum": [
+                "product_presence",
+                "net_conversion",
+                "intermediate_presence",
+                "elementary_mechanism",
+                "pathway",
+                "order_of_steps"
+              ]
+            },
+            "proposition": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "pattern": "\\S"
+            },
+            "asserted_by": {
+              "type": "string",
+              "enum": [
+                "authors",
+                "analyst"
+              ]
+            }
+          },
+          "required": [
+            "scope",
+            "proposition",
+            "asserted_by"
+          ],
+          "additionalProperties": false
+        },
+        "experiment": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "original_experiment_id": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "pattern": "\\S"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "independence_group_id": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "pattern": "\\S"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "origin_resolution_status": {
+              "type": "string",
+              "enum": [
+                "confirmed",
+                "unresolved"
+              ]
+            },
+            "stage": {
+              "type": "string",
+              "enum": [
+                "reaction",
+                "pretreatment",
+                "workup",
+                "analysis"
+              ]
+            },
+            "conditions": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "dimension": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "basis": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "unit": {
+                    "type": "string"
+                  },
+                  "value_state": {
+                    "type": "string",
+                    "enum": [
+                      "reported",
+                      "not_reported",
+                      "unknown",
+                      "not_applicable",
+                      "ambiguous"
+                    ]
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "interval",
+                      "controlled_term",
+                      "composition"
+                    ]
+                  },
+                  "lower": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "upper": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "lower_inclusive": {
+                    "type": "boolean"
+                  },
+                  "upper_inclusive": {
+                    "type": "boolean"
+                  },
+                  "terms": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "inventory_complete": {
+                    "type": "boolean"
+                  },
+                  "raw_value_text": {
+                    "type": "string"
+                  },
+                  "raw_unit": {
+                    "type": "string"
+                  },
+                  "derivation": {
+                    "type": "string",
+                    "enum": [
+                      "reported",
+                      "calculated"
+                    ]
+                  },
+                  "calculation": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "key",
+                  "dimension",
+                  "basis",
+                  "unit",
+                  "value_state",
+                  "kind",
+                  "lower",
+                  "upper",
+                  "lower_inclusive",
+                  "upper_inclusive",
+                  "terms",
+                  "inventory_complete",
+                  "raw_value_text",
+                  "raw_unit",
+                  "derivation",
+                  "calculation"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "id",
+            "original_experiment_id",
+            "independence_group_id",
+            "origin_resolution_status",
+            "stage",
+            "conditions"
+          ],
+          "additionalProperties": false
+        },
+        "evidence": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "stance": {
+              "type": "string",
+              "enum": [
+                "supports",
+                "refutes",
+                "inconclusive"
+              ]
+            },
+            "evidence_type": {
+              "type": "string",
+              "enum": [
+                "directly_observed",
+                "strongly_supported",
+                "proposed",
+                "adopted_from_prior_literature",
+                "speculative"
+              ]
+            },
+            "measured_scope": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "product_presence",
+                    "net_conversion",
+                    "intermediate_presence",
+                    "elementary_mechanism",
+                    "pathway",
+                    "order_of_steps"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "epistemic_origin": {
+              "type": "string",
+              "enum": [
+                "experiment_report",
+                "authors_interpretation",
+                "cited_interpretation",
+                "analyst_inference"
+              ]
+            },
+            "source_access": {
+              "type": "string",
+              "enum": [
+                "fulltext",
+                "abstract_only",
+                "secondary_only",
+                "unavailable"
+              ]
+            },
+            "strength_rationale": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "pattern": "\\S"
+            },
+            "alternatives_tested": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "pattern": "\\S"
+              }
+            },
+            "limitations": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "pattern": "\\S"
+              }
+            },
+            "source_anchor_id": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "stance",
+            "evidence_type",
+            "measured_scope",
+            "epistemic_origin",
+            "source_access",
+            "strength_rationale",
+            "alternatives_tested",
+            "limitations",
+            "source_anchor_id"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "compounds",
+        "reaction",
+        "claim",
+        "experiment",
+        "evidence"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "project_id",
+    "paper_id",
+    "case_id",
+    "expected_revision",
+    "analysis_run",
+    "payload"
+  ],
+  "additionalProperties": false
+}
