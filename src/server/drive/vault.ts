@@ -24,7 +24,7 @@ export class PostgresSecretVault implements SecretVault {
    let mutation:{value:unknown;expiresAt:number}|null|undefined;
    const result=await fn({value,put:(v,e)=>{if(!Number.isFinite(e)||e<=Date.now())throw new DriveError('EXPIRED');mutation={value:v,expiresAt:e};},remove:()=>{mutation=null;}});
    if(mutation===null)await call('delete');else if(mutation){const iv=randomBytes(12);const cipher=createCipheriv('aes-256-gcm',this.encryptionKey,iv);cipher.setAAD(aad);const encrypted=Buffer.concat([cipher.update(JSON.stringify(mutation.value),'utf8'),cipher.final()]);await call('put',[iv,cipher.getAuthTag(),encrypted].map(b=>b.toString('base64url')).join('.'),mutation.expiresAt);}
-   await c.query('COMMIT');await c.query('RESET request.jwt.claim.sub');return result;
+   await c.query('COMMIT');return result;
   }catch(e){destroy=true;await c.query('ROLLBACK').catch(()=>{});throw e instanceof DriveError?e:new DriveError('RETRYABLE');}finally{c.release(destroy);}
  }
 }

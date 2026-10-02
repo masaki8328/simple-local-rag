@@ -35,7 +35,7 @@ export class DriveWorker{
    const guard=(await connection.query(workerPreflight)).rows[0];
    if(!guard||guard.login!==this.expectedLogin||guard.session_login!==this.expectedLogin||guard.worker_usage!==true||['elevated','owner_member','app_member','extra_membership','delegable_role','excessive_schema','table_access','extra_definer'].some(k=>guard[k]!==false))throw new DriveError('UNCONFIGURED');
    await connection.query("select set_config('request.jwt.claim.sub',$1,true), set_config('statement_timeout','10000',true), set_config('lock_timeout','5000',true)",[caller.id]);
-   const result=await connection.query(sql,args);await connection.query('COMMIT');await connection.query('RESET request.jwt.claim.sub');return result.rows[0]?.result;
+   const result=await connection.query(sql,args);await connection.query('COMMIT');return result.rows[0]?.result;
   }catch(e){destroy=true;try{await connection.query('ROLLBACK');}catch{destroy=true;}throw workerFailure(e);}finally{connection.release(destroy);}
  }
  async bind(jwt:string,id:string,project:string,account:string,folder:string){uuid.parse(id);uuid.parse(project);z.string().min(1).max(255).parse(account);z.string().min(1).max(255).parse(folder);return uuid.parse(await this.execute(jwt,'select kg_private.bind_drive($1::uuid,$2::uuid,$3::text,$4::text) as result',[id,project,account,folder]));}

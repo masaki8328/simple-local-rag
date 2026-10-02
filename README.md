@@ -43,3 +43,7 @@ The PDF queue, upload/recovery components, byte-verification service and private
 The bounded paper → compounds/reaction → experiment conditions → evidence path includes immutable revisions and staged JSON preview/apply. Source confirmation remains disabled. See [research core](docs/task4-research-core.md) and [the accepted Drive adapter plan](docs/drive-adapter-plan.md). Google Drive will hold PDF originals; Supabase Storage Task 3 is superseded and its unapplied SQL is outside the active migration directory. No app OAuth or Drive upload is configured.
 
 Task 5 adds a disabled Google Drive adapter and provider-neutral `stored_unparsed` receipt bridge. See [scope and limits](docs/task5-drive.md) and [trial deployment / OAuth setup](docs/task5-setup.md). Browser Drive behavior is mocked; OAuth, credential storage, private download delivery and live migrations remain unconfigured.
+
+## Approved Drive release configuration
+
+The reviewed release now reads validated server-only Drive settings and enables the existing integration only when all required fields and the explicit enable flag are present. Missing settings leave Drive closed while metadata/login stays independent. Preview deployments keep Drive disabled. See [exact Vercel fields, user-only password provisioning, callback, TLS/pooler requirements and release gates](docs/release-drive-configuration.md). No credentials or hosted activation are performed by this source change.

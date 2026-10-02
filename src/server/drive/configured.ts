@@ -6,7 +6,7 @@ import {DriveWorker} from './worker';
 import {composeDriveService,driveHandler} from './orchestration';
 import type {TokenProvider} from './adapter';
 import type {SessionVault} from './service';
-// Local wiring target for explicitly provisioned capabilities. Production runtime never calls this.
+// Local wiring target for explicitly provisioned capabilities. The OAuth-capable production path uses configuredDriveIntegration instead.
 // Singleton pool; fresh cookie-bound Supabase client per request. No raw credential env discovery.
 export function configuredDriveHandler(config:{origin:string;database:Parameters<typeof createWorkerPool>[0];supabase:{url:string;key:string};tokens:TokenProvider;sessions:SessionVault;userClient:()=>Promise<SupabaseClient>}){
  let origin:URL;try{origin=new URL(config.origin);if(origin.origin!==config.origin||origin.protocol!=='https:')throw Error();}catch{throw new DriveError('UNCONFIGURED');}

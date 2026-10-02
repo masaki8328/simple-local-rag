@@ -4,9 +4,10 @@ import {createClient} from '@supabase/supabase-js';
 import {DriveError} from '../../application/drive';
 import type {VerifyWorkerJWT} from './worker';
 // Explicit server capability; no environment lookup, default admin URL or TLS bypass.
-export function createWorkerPool(config:{host:string;port:number;database:string;login:string;password:string;ca?:string}){
+export function createWorkerPool(config:{host:string;port:number;database:string;login:string;password:string;user?:string;ca?:string}){
  if(!config.host||!config.database||!config.password||!config.login||!Number.isInteger(config.port)||config.port<1||config.port>65535||['postgres','service_role','kg_drive_owner','authenticated'].includes(config.login))throw new DriveError('UNCONFIGURED');
- const pool=new Pool({host:config.host,port:config.port,database:config.database,user:config.login,password:config.password,ssl:{rejectUnauthorized:true,...(config.ca?{ca:config.ca}:{})},max:2,connectionTimeoutMillis:5000,idleTimeoutMillis:10000,statement_timeout:10000,application_name:'kg-drive-worker'});
+ if(config.user&&config.user!==config.login&&(!config.user.startsWith(config.login+'.')||!/^[a-z0-9]{20}$/.test(config.user.slice(config.login.length+1))))throw new DriveError('UNCONFIGURED');
+ const pool=new Pool({host:config.host,port:config.port,database:config.database,user:config.user??config.login,password:config.password,ssl:{rejectUnauthorized:true,...(config.ca?{ca:config.ca}:{})},max:2,connectionTimeoutMillis:5000,idleTimeoutMillis:10000,application_name:'kg-drive-worker'});
  // Never forward driver errors (which may contain connection details) to logs or clients.
  pool.on('error',()=>{});return pool;
 }
