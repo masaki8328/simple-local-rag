@@ -28,7 +28,7 @@ Use Node 24 and the committed npm lockfile. If the home cache is unavailable, us
 - [Verification results and limitations](docs/verification.md)
 - [C1 migration](supabase/migrations/202610020001_c1_baseline.sql)
 
-The database still comprises only the C1 tables: projects, project_members, audit_events, papers, paper_identifiers, document_assets, paper_documents and source_anchors. Other scientific entities are contracts and synthetic tests, not persisted tables. The SQL tests use real PostgreSQL grants/RLS with a test-only Auth identity shim; they do not certify Supabase Auth, REST or Storage integration.
+The reviewed metadata baseline contains the C1 tables and Task 2 workflow. The local Task 4 candidate additionally persists draft research cases with versioned compounds, reactions, experiments, conditions, claims and evidence; it awaits independent review and is not a live migration. Confirmation and source verification remain closed. The SQL tests use real PostgreSQL grants/RLS with a test-only Auth identity shim; they do not certify Supabase Auth, REST or Storage integration.
 
 Do not commit research PDFs, private passages, exports, actual analysis JSON or credentials. `.gitignore` is a guardrail, not a content-inspection substitute. The historical tutorial PDF remains recoverable from Git history; it is absent from the current working tree. Do not rewrite history.
 
