@@ -5,6 +5,7 @@ import {driveInput,DRIVE_TARGET_BYTES,DriveError,type DriveBinding,type DriveInp
 import type {DriveAdapter,DriveMeta} from './adapter';
 export interface DriveRepository{
  authorize(project:string,paper:string):Promise<void>;
+ list?(project:string,paper:string):Promise<DriveIntent[]>;
  binding(project:string):Promise<DriveBinding>;
  findIntent(id:string):Promise<DriveIntent|null>;
  // Atomically returns existing identical intent; different input conflicts. File ID allocated before insert.
@@ -30,6 +31,7 @@ export class DriveService{
   const after=await this.adapter.metadata(i);this.valid(i,after);if(before.headRevisionId!==after.headRevisionId||before.size!==after.size)throw new DriveError('REPLACED');if(size!==before.size)throw new DriveError('RETRYABLE');if(!hasPDFHeader(prefix))throw new DriveError('INVALID_PDF');return {revisionId:before.headRevisionId,sha256:hash.digest('hex'),byteSize:size};}
  private async checked(i:DriveIntent){try{return await this.inspect(i);}catch(error){const e=error instanceof DriveError?error:new DriveError('RETRYABLE');const state:SourceEvent=e.code==='UNAVAILABLE'?'unavailable':e.code==='REPLACED'?'replaced':e.code==='INVALID_PDF'||e.code==='OVERSIZE'?'invalid_bytes':'retryable';await this.repo.event(i,state);throw e;}}
  async complete(id:string){const i=await this.scoped(id);const old=await this.repo.receipt(id);if(!old)this.active(i);const v=await this.checked(i);if(old){if(old.revisionId!==v.revisionId||old.sha256!==v.sha256||old.byteSize!==v.byteSize){await this.repo.event(i,'replaced');throw new DriveError('REPLACED');}return old;}return this.repo.finalize(i,v);}
+ async attempts(project:string,paper:string){await this.repo.authorize(project,paper);if(!this.repo.list)throw new DriveError('UNCONFIGURED');return Promise.all((await this.repo.list(project,paper)).map(async i=>({id:i.id,filename:i.filename,size:i.size,edition:i.edition,source:i.source,accessBasis:i.accessBasis,expiresAt:i.expiresAt,cancelled:i.cancelled,receipt:await this.repo.receipt(i.id)})));}
  async status(id:string){const i=await this.scoped(id);return {id:i.id,receipt:await this.repo.receipt(id),cancelled:i.cancelled,expiresAt:i.expiresAt};}
  async cancel(id:string){const i=await this.scoped(id);if(await this.repo.receipt(id))throw new DriveError('CONFLICT');await this.repo.cancel(i);}
  async checkDownload(id:string){const i=await this.scoped(id);const r=await this.repo.receipt(id);if(!r)throw new DriveError('UNAVAILABLE');await this.complete(id);await this.repo.event(i,'checked');return {receipt:r,disposition:'attachment' as const};}

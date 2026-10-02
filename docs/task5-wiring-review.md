@@ -29,3 +29,5 @@ Independent reviewer `/root/task5_patch_review` found the non-inherited membersh
 5. Implement durable browser attempt recovery and paper-document listing/reopening, plus authenticated revision-pinned private attachment transport. The existing mounted-form retry and server status command are not a complete recovery UI. `download` still returns DOWNLOAD_UNPROVEN.
 
 These boundaries preserve stored_unparsed receipts, draft-only scientific confirmation, immutable provenance and independent claim/experiment scope. No parser, verified passage, chemistry confirmation or AI service was added.
+
+Follow-up: OAuth, encrypted PostgreSQL vault and reload reconciliation are now locally connected. See [connected integration and remaining live boundaries](task5-connected-integration.md). Earlier unimplemented-interface descriptions above refer to the prior checkpoint. Production remains disabled.

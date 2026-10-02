@@ -1,0 +1,20 @@
+\set ON_ERROR_STOP on
+begin;
+create function pg_temp.ok(ok boolean,label text) returns void language plpgsql as $$begin if ok is distinct from true then raise exception 'FAIL %',label;end if;raise notice 'PASS: %',label;end$$;
+create function pg_temp.denied(statement text,label text) returns void language plpgsql as $$begin begin execute statement;exception when insufficient_privilege then raise notice 'PASS: %',label;return;end;raise exception 'FAIL %',label;end$$;
+set role authenticated;
+select pg_temp.denied('select kg_private.vault_access(''token:SYNTHETIC'',''read'')','client cannot invoke vault');
+reset role;
+set role kg_vault_worker;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
+select kg_private.vault_access('token:SYNTHETIC','put','SYNTHETIC-ciphertext',now()+interval '1 hour');
+select pg_temp.ok(kg_private.vault_access('token:SYNTHETIC','read')='SYNTHETIC-ciphertext','vault round trip through narrow function');
+select pg_temp.denied('select * from kg_private.drive_secrets','vault worker cannot read ciphertext tables directly');
+select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',true);
+select pg_temp.ok(kg_private.vault_access('token:SYNTHETIC','read') is null,'vault isolates user identity');
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
+select kg_private.vault_access('token:SYNTHETIC','delete');
+select pg_temp.ok(kg_private.vault_access('token:SYNTHETIC','read') is null,'vault one-time state removal');
+reset role;
+select pg_temp.ok(not pg_has_role('kg_vault_worker','kg_vault_owner','MEMBER') and not has_schema_privilege('kg_vault_owner','kg_private','CREATE'),'vault owner bridge absent');
+rollback;

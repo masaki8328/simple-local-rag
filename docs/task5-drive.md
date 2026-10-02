@@ -31,3 +31,5 @@ Production Drive service and `/api/drive` fail closed before consuming a body. O
 Both legacy Storage HTTP endpoints permanently return 410. Production paper/queue UI uses the disabled Drive control and does not call legacy upload-intent/page-count queries. Historical Storage code/tests remain as superseded regression artifacts.
 
 See task5-setup.md for the separate deployment and OAuth sequences. Full graph/search/RQ and source analysis remain outside this slice.
+
+Follow-up: OAuth, encrypted PostgreSQL vault and reload reconciliation are now locally connected. See [connected integration and remaining live boundaries](task5-connected-integration.md). Earlier unimplemented-interface descriptions above refer to the prior checkpoint. Production remains disabled.

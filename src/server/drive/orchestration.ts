@@ -13,7 +13,7 @@ export function composeDriveService(deps:{client:SupabaseClient;worker:DriveWork
 }
 const begin=driveInput.extend({action:z.literal('begin')});
 const command=z.strictObject({action:z.enum(['session','complete','cancel','status','download']),id:uuid});
-const requestSchema=z.union([begin,command]);
+const requestSchema=z.union([begin,command,z.strictObject({action:z.literal('list'),projectId:uuid,paperId:uuid})]);
 async function jsonBody(request:Request){if(request.headers.get('content-type')?.split(';')[0].trim().toLowerCase()!=='application/json')throw new DriveError('CONFLICT');const reader=request.body?.getReader();if(!reader)throw new DriveError('CONFLICT');const parts:Uint8Array[]=[];let length=0;try{while(true){const r=await reader.read();if(r.done)break;length+=r.value.length;if(length>16384)throw new DriveError('OVERSIZE');parts.push(r.value);}}finally{await reader.cancel().catch(()=>{});}try{return JSON.parse(Buffer.concat(parts,length).toString('utf8'));}catch{throw new DriveError('CONFLICT');}}
 const headers={'Cache-Control':'private, no-store','Referrer-Policy':'no-referrer'};
 export function driveHandler(factory:()=>DriveService|Promise<DriveService>,trustedOrigin?:string){
@@ -21,6 +21,7 @@ export function driveHandler(factory:()=>DriveService|Promise<DriveService>,trus
   // Disabled production rejects before body read; configured requests then enforce CSRF origin.
   const service=await factory();if(!request||!trustedOrigin||request.headers.get('origin')!==trustedOrigin||new URL(request.url).origin!==trustedOrigin)throw new DriveError('FORBIDDEN');
   const parsed=requestSchema.safeParse(await jsonBody(request));if(!parsed.success)throw new DriveError('CONFLICT');const body=parsed.data;
+  if(body.action==='list')return Response.json(await service.attempts(body.projectId,body.paperId),{headers});
   if(body.action==='begin'){const {action:_,...input}=body;void _;const i=await service.begin(input);return Response.json({id:i.id,expiresAt:i.expiresAt},{headers});}
   if(body.action==='session')return Response.json(await service.uploadSession(body.id),{headers});
   if(body.action==='complete')return Response.json(await service.complete(body.id),{headers});

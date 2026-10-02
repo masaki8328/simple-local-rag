@@ -46,3 +46,7 @@ docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgre
 docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres < tests/task5-drive.sql
 python scripts/test-drive-concurrency.py "$kg_container"
 node --conditions=react-server --import tsx scripts/drive-worker-preflight.ts | docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres
+# Local encrypted vault candidate, never applied to hosted database by this script.
+docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/migrations/20261002071500_drive_vault.sql
+docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres < tests/task5-vault.sql
+node --conditions=react-server --import tsx scripts/vault-preflight.ts | docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres
