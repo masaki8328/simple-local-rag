@@ -4,7 +4,7 @@ Base: reviewed `33dbaa55f95882befa3aaecae3140bb8de88febd`. Root reported user ap
 
 ## Migration handoff
 
-`Alkali-KG-Outstanding-Migrations-33dbaa5.json` contains seven ordered exact SQL files with SHA-256 and byte lengths. Root applies through the Supabase connector. Preserve `docs/hosted-migration-map.md`: C1 and Task2 already exist under different hosted versions and MUST NOT be replayed. The superseded Supabase Storage migration is excluded. This release does not change any migration bytes.
+`Alkali-KG-Outstanding-Migrations-33dbaa5.json` contains seven ordered exact SQL files with SHA-256 and byte lengths. Root subsequently reported all seven applied at 11:47–11:48 UTC on 2026-10-02; the hosted versions are recorded in `docs/hosted-migration-map.md`. Do not apply the bundle again. Preserve `docs/hosted-migration-map.md`: C1 and Task2 already exist under different hosted versions and MUST NOT be replayed. The superseded Supabase Storage migration is excluded. This release does not change any migration bytes.
 
 ## Minimal Vercel fields
 
@@ -88,3 +88,11 @@ To disable Drive, set `KG_DRIVE_ENABLED=false` and redeploy; metadata/login rema
 Official references checked for this preparation: [Supabase connection modes and TLS](https://supabase.com/docs/guides/database/connecting-to-postgres), [node-postgres TLS behavior](https://node-postgres.com/features/ssl), [psql password prompts](https://www.postgresql.org/docs/current/app-psql.html), [Google Web OAuth](https://developers.google.com/identity/protocols/oauth2/web-server), [Vercel environment scoping](https://vercel.com/docs/environment-variables). The Supabase markdown changelog could not be fetched (web content-type rejection and HTTP 403); no schema/API changes were based on it.
 
 Local verification for this release: 91 app/server tests, 209 disposable PostgreSQL assertions and 6 concurrency/pool checks passed; typecheck, lint, production build and 3 HTTP smoke checks passed. Configuration tests cover every missing field, malformed settings, preview disablement, lazy singleton construction, pooled/bare username separation and mandatory certificate verification. No live Google or Supabase operation was used for validation.
+
+## Android setup feasibility check — 2026-10-02
+
+The official [role documentation](https://supabase.com/docs/guides/database/postgres/roles) describes the Dashboard password reset as changing the `postgres` project password. It does not provide a custom-role password reset flow. Inspection of the official Studio [create-role form](https://github.com/supabase/supabase/blob/master/apps/studio/components/interfaces/Database/Roles/CreateRolePanel.tsx) and [role editor](https://github.com/supabase/supabase/blob/master/apps/studio/components/interfaces/Database/Roles/RoleRow.tsx) found permissions controls but no password field. Hosted UI versions can differ; a secure dashboard-only custom-password path has not been verified. Do not substitute plaintext password SQL in the SQL Editor.
+
+The verified provisioning procedure above needs a trusted terminal with `psql`, not inherently a PC. A desktop terminal is the simplest documented route; an Android terminal setup has not been validated in this project. PostgreSQL documents that `\password` hides the input and encrypts it before sending the change, avoiding plaintext in command history or server logs. Do not reset the project password merely to configure these two custom roles.
+
+Minimal sequence: (1) provision the two restricted roles and passwords using the terminal procedure, (2) configure the Google Web OAuth client and exact callback, (3) enter the server fields into Vercel Production, then redeploy, (4) consent from the app and verify a synthetic PDF plus tenant isolation. Google Cloud and Vercel settings are browser workflows, but this project has not verified their Android usability. The ChatGPT Google Drive connector/plugin authorization cannot supply the app OAuth client or replace the user consenting to this separate application.

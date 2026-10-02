@@ -1,0 +1,9 @@
+import {ResearchHandoff} from '../../src/components/research-handoff';
+import {syntheticCase} from '../fixtures/research-case';
+import type {CaseVersion} from '../../src/domain/research-case';
+export const project='11111111-1111-4111-8111-111111111111',paper='22222222-2222-4222-8222-222222222222',question='33333333-3333-4333-8333-333333333333',caseId='44444444-4444-4444-8444-444444444444',versionId='55555555-5555-4555-8555-555555555555',requestId='66666666-6666-4666-8666-666666666666',resultId='77777777-7777-4777-8777-777777777777';
+const payload=syntheticCase();
+const version:CaseVersion={id:versionId,case_id:caseId,revision:1,payload,author_kind:'human',review_state:'human_corrected',confirmation:'draft',change_reason:'SYNTHETIC',created_at:'2026-10-02'};
+const proposal={schema_version:'research-case/0.1' as const,project_id:project,paper_id:paper,case_id:caseId,expected_revision:1,analysis_run:{id:'synthetic',adapter:'dot_manual_json' as const,protocol_version:'0.1'},payload};
+export const result={schema_version:'research-result/0.1',request_id:requestId,request_hash:'a'.repeat(64),case_import:proposal,conclusion:'SYNTHETIC proposed answer',uncertainties:['SYNTHETIC unknown']};
+export function HandoffHarness(){return <ResearchHandoff project={project} invalidEvidenceVersions={[versionId]} questions={[{id:question,question:'SYNTHETIC RQ',revision:0,data:null}]} history={[]} cases={[{id:caseId,paper_id:paper,current_version_id:versionId,revision:1}]} versions={[version]} papers={[{id:paper,title:'SYNTHETIC paper'}]} requests={[{id:requestId,question_id:question,paper_id:paper,case_id:caseId,content_hash:result.request_hash,created_at:'2026-10-02',snapshot:{case_version_id:versionId,case_import:proposal,question:{id:question,question:'SYNTHETIC RQ',revision:0},sources:[]}}]} results={[{id:resultId,request_id:requestId,batch_id:resultId,raw_content:JSON.stringify(result),created_at:'2026-10-02'}]}/>;}

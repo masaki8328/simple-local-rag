@@ -1,0 +1,31 @@
+import 'server-only';
+import {z} from 'zod';
+import type {SupabaseClient} from '@supabase/supabase-js';
+import {questionRevisionSchema,parseResearchResult,handoffInstructions,type QuestionRevision,type QuestionState} from '../domain/research-handoff';
+import {caseDiff,type CaseVersion,type CaseImport} from '../domain/research-case';
+import {AppError} from '../application/models';
+import {researchDAL} from './dal';
+import {userClient} from './supabase/client';
+export type HandoffRequest={id:string;question_id:string;paper_id:string;case_id:string;content_hash:string;created_at:string;snapshot:{case_version_id:string;case_import:CaseImport;question:{id:string;question:string;revision:number};sources:unknown[]}};
+export type HandoffResult={id:string;request_id:string;batch_id:string;raw_content:string;created_at:string};
+function fail(error:{message:string}|null){if(error)throw new AppError(error.message==='KG_CONFLICT'?'CONFLICT':error.message==='KG_FORBIDDEN'?'FORBIDDEN':error.message==='KG_ARCHIVED'?'ARCHIVED':'INVALID');}
+export class HandoffDAL{
+ constructor(private client:SupabaseClient,private authorize:(project:string)=>Promise<void>){}
+ private async scope(project:string){z.uuid().parse(project);await this.authorize(project);}
+ async overview(project:string){await this.scope(project);const results=await Promise.all([
+ this.client.from('research_questions').select('id,question').eq('project_id',project),
+ this.client.from('question_revisions').select('id,question_id,revision,data,created_at').eq('project_id',project).order('revision',{ascending:false}),
+ this.client.from('research_requests').select('id,question_id,paper_id,case_id,content_hash,created_at,snapshot').eq('project_id',project).order('created_at',{ascending:false}).limit(30),
+ this.client.from('research_results').select('id,request_id,batch_id,raw_content,created_at').eq('project_id',project).order('created_at',{ascending:false}).limit(30),
+ this.client.from('research_cases').select('id,paper_id,current_version_id,revision').eq('project_id',project).is('archived_at',null),
+ this.client.from('research_case_versions').select('id,case_id,revision,payload,author_kind,review_state,confirmation,change_reason,created_at').eq('project_id',project),
+ this.client.from('scientific_evidence_reviews').select('case_version_id,decision,source_attestation_id,revision').eq('project_id',project).order('revision',{ascending:false}),
+ this.client.from('source_attestations').select('id,anchor_id,decision,revision').eq('project_id',project).order('revision',{ascending:false}),
+ this.client.from('source_anchors').select('supersedes_anchor_id').eq('project_id',project),
+ ]);for(const r of results)fail(r.error);const [q,revisions,requests,returned,cases,versions,reviews,attestations,anchors]=results;const history=revisions.data as {id:string;question_id:string;revision:number;data:QuestionRevision;created_at:string}[];const invalidEvidenceVersions=(versions.data??[]).filter(v=>{const r=reviews.data?.find(r=>r.case_version_id===v.id),a=attestations.data?.find(a=>a.anchor_id===v.payload.evidence.source_anchor_id);return !cases.data?.some(c=>c.current_version_id===v.id)||r?.decision!=='accepted'||!a||a.decision!=='attested'||a.id!==r.source_attestation_id||anchors.data?.some(a=>a.supersedes_anchor_id===v.payload.evidence.source_anchor_id);}).map(v=>v.id);return {invalidEvidenceVersions,questions:(q.data??[]).map(q=>{const v=history.find(v=>v.question_id===q.id);return {id:q.id,question:v?.data.question??q.question,revision:v?.revision??0,data:v?.data??null} as QuestionState;}),history,requests:requests.data as HandoffRequest[],results:returned.data as HandoffResult[],cases:cases.data as {id:string;paper_id:string;current_version_id:string;revision:number}[],versions:versions.data as CaseVersion[]};}
+ async revise(project:string,question:string,id:string,expected:number,data:unknown){await this.scope(project);z.uuid().parse(question);z.uuid().parse(id);z.number().int().nonnegative().parse(expected);const r=await this.client.rpc('revise_research_question',{p_project:project,p_question:question,p_id:id,p_expected:expected,p_data:questionRevisionSchema.parse(data)});fail(r.error);return r.data as string;}
+ async request(project:string,id:string,question:string,paper:string,caseId:string){await this.scope(project);[id,question,paper,caseId].forEach(v=>z.uuid().parse(v));const r=await this.client.rpc('create_research_request',{p_project:project,p_id:id,p_question:question,p_paper:paper,p_case:caseId});fail(r.error);return r.data as string;}
+ async download(project:string,id:string){await this.scope(project);z.uuid().parse(id);const r=await this.client.from('research_requests').select('id,content_hash,snapshot').eq('project_id',project).eq('id',id).maybeSingle();fail(r.error);if(!r.data)throw new AppError('FORBIDDEN');return {...r.data.snapshot,request_id:r.data.id,request_hash:r.data.content_hash,instructions:handoffInstructions,result_template:{schema_version:'research-result/0.1',request_id:r.data.id,request_hash:r.data.content_hash,case_import:r.data.snapshot.case_import,conclusion:'',uncertainties:[]}};}
+ async stage(project:string,id:string,raw:string){await this.scope(project);z.uuid().parse(id);const p=parseResearchResult(raw);if(p.case_import.project_id!==project)throw new AppError('FORBIDDEN');const r=await this.client.rpc('stage_research_result',{p_project:project,p_id:id,p_raw:raw});fail(r.error);const c=await this.client.from('research_cases').select('revision,current_version_id').eq('project_id',project).eq('id',p.case_import.case_id).maybeSingle();fail(c.error);const v=await this.client.from('research_case_versions').select('payload,author_kind,review_state').eq('project_id',project).eq('id',c.data?.current_version_id).maybeSingle();fail(v.error);return {batchId:r.data as string,caseId:p.case_import.case_id,paperId:p.case_import.paper_id,diff:caseDiff(v.data?.payload??null,p.case_import.payload),humanProtected:v.data?.author_kind==='human'||v.data?.review_state?.startsWith('human_'),stale:c.data?.revision!==p.case_import.expected_revision};}
+}
+export async function handoffDAL(){return new HandoffDAL(await userClient(),async p=>{await (await researchDAL()).project(p);});}
