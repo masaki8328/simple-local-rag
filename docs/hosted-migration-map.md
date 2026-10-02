@@ -32,3 +32,9 @@ Root reported application of the following seven migrations and verification tha
 The earlier Task 3 Supabase Storage candidate was superseded by Drive and is not part of the applied set. Do not replay any of these nine recorded migrations. The `kg_drive_app` and `kg_vault_app` logins and Google credentials remain unprovisioned according to root. Root also reported main advanced to `68ea60a00a3f37527b09cb880ab10a4cf0c28a15`; successful production deployment and live Drive operation have not been verified here.
 
 Follow-up root report: production `68ea60a` is READY. Hosted-app login was cancelled and was not retried by this executor. `20261002140245_research_handoff.sql` is a new local candidate only; it has no hosted migration version and must not be mistaken for an applied migration.
+
+## Root-reported research handoff application — 2026-10-02 15:06 UTC
+
+Root reports `20261002140245_research_handoff.sql` applied as hosted `20261002150644 / research_handoff`, exact SHA-256 `96e7b0375a869842131dcbed451c3266449c38f10a2bd5027e97cdfb6619e2ea`. Do not replay. This supersedes its earlier local-candidate status. Production code remains `68ea60a` per root. Credentials and Google setup are unchanged.
+
+Reviewed chemical proposal was promoted byte-for-byte using Supabase CLI `migration new` to `20261002150903_chemical_fields.sql`, SHA-256 `dbba5487a6bea35e1303116f739f9331554c0d5b5d4cd4b7e3fd861ddfc97f23`. This chemical migration is still LOCAL ONLY, pending root application; no hosted version is assigned here.

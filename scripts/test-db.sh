@@ -71,8 +71,15 @@ node --import tsx scripts/project-review-fixture.ts | docker exec -i "$kg_contai
 docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/migrations/20261002140245_research_handoff.sql
 node --import tsx scripts/handoff-fixture.ts | docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres
 
-# Explicit opt-in local SQL review proposal, not part of migration history or hosted rollout.
+# Reviewed chemical migration, applied only to this disposable local database.
+docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/migrations/20261002150903_chemical_fields.sql
+# Retain optional historical chemistry fixture.
 if [ "${KG_CHEMICAL_PROPOSAL:-0}" = "1" ]; then
- docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/proposals/chemical-fields.sql
  node --import tsx scripts/chemical-fields-fixture.ts | docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres
+fi
+
+# Opt-in unapproved acquisition proposal, disposable database only.
+if [ "${KG_LITERATURE_PROPOSAL:-0}" = "1" ]; then
+ docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/proposals/literature-loop.sql
+ docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres < tests/literature-loop.sql
 fi

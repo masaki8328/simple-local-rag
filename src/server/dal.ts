@@ -4,7 +4,7 @@ import {AppError,type ErrorCode,type Paper,type Project} from '../application/mo
 import {ResearchDAL,type ResearchGateway} from './research';
 import {userClient} from './supabase/client';
 const projectFields='id,name,description,revision,archived_at';
-const paperFields='id,project_id,title,journal,year,notes,revision,archived_at';
+const paperFields='id,project_id,title,journal,year,notes,revision,archived_at,authors,abstract,canonical_url,relevance';
 function failure(error:{message:string;code?:string}|null){
  if(!error)return;
  const allowed:ErrorCode[]=['CONFLICT','DUPLICATE_TITLE','DUPLICATE_DOI','FORBIDDEN','INVALID','ARCHIVED'];
