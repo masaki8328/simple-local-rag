@@ -1,3 +1,4 @@
+import './network-harness';
 // Isolated component test harness, never imported by the Next.js application.
 import {createRoot} from 'react-dom/client';
 import {ProjectForm,PaperForm,ArchiveForm} from '../../src/components/forms';

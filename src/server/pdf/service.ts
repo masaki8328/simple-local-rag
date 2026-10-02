@@ -1,4 +1,5 @@
 import 'server-only';
+import {hasPDFHeader} from '../../application/pdf-header';
 import {uuid} from '../../application/models';
 import {createHash} from 'node:crypto';
 import {PDFDocument} from 'pdf-lib';
@@ -19,7 +20,7 @@ export interface PrivateStorage{
 }
 export async function inspectPDF(bytes:Uint8Array,max:number):Promise<VerifiedPDF>{
  if(bytes.byteLength>max)throw new PdfError('OVERSIZE');
- if(bytes.byteLength<20||Buffer.from(bytes.subarray(0,8)).toString('ascii').match(/^%PDF-\d\.\d/)===null)throw new PdfError('INVALID_PDF');
+ if(bytes.byteLength<20||!hasPDFHeader(bytes))throw new PdfError('INVALID_PDF');
  try{
   const pdf=await PDFDocument.load(bytes,{ignoreEncryption:false,throwOnInvalidObject:true,updateMetadata:false});
   const pageCount=pdf.getPageCount();if(pdf.isEncrypted||pageCount<1||pageCount>2000)throw new Error('Invalid pages');

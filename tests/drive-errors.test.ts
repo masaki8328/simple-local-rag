@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {safeDriveCode} from '../src/application/drive';
+test('only safe known Drive error codes reach UI',()=>{for(const code of ['RECONNECT','QUOTA','EXPIRED','FORBIDDEN','RETRYABLE'])assert.equal(safeDriveCode({error:code}),code);for(const body of [null,'secret',{error:'https://secret.invalid/?token=secret'},{error:{token:'secret'}},{message:'QUOTA'}])assert.equal(safeDriveCode(body),'RETRYABLE');});
