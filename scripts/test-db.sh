@@ -40,3 +40,8 @@ python scripts/test-db-concurrency.py "$kg_container"
 docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/migrations/20261002045414_research_case_core.sql
 node --import tsx scripts/research-case-fixture.ts | docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres
 python scripts/test-research-concurrency.py "$kg_container"
+
+# Task 5: provider-neutral receipt bridge, without superseded Storage migration.
+docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/migrations/20261002060000_drive_receipts.sql
+docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres < tests/task5-drive.sql
+python scripts/test-drive-concurrency.py "$kg_container"

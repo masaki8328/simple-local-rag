@@ -27,3 +27,6 @@ test-results/
 
 # Local Supabase CLI metadata, never project credentials
 supabase/.temp/
+
+# Local deployment links and credentials
+.vercel/
