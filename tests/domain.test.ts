@@ -94,3 +94,5 @@ test('review: resolved adopted citation preserves the original group without add
  const g=classifyGraph({reaction:a.reactions[0],claim:a.claims[0],evidence:[a.evidence[0],citation],bundles:a.condition_bundles,filters:[]});
  assert.equal(g.confirmed_independent_groups,1);assert.equal(g.independence_unknown,false);
 });
+
+test('empty condition filters still require a known matching experiment stage',()=>{const b=bundle('stage-only',80);assert.equal(matchBundle(b,'reaction',[]),'matched');for(const stage of ['pretreatment','workup','analysis'] as const)assert.equal(matchBundle(b,stage,[]),'unknown');assert.equal(matchBundle(undefined,'reaction',[]),'unknown');b.stage='analysis';assert.equal(matchBundle(b,'analysis',[]),'matched');});

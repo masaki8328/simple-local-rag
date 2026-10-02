@@ -21,8 +21,8 @@ function conditionMatches(c:Condition, f:Filter):Match {
   return 'unknown';
 }
 export function matchBundle(bundle:Bundle|undefined, stage:Bundle['stage'], filters:Filter[]):Match {
-  if(!filters.length) return 'matched';
   if(!bundle || bundle.stage!==stage) return 'unknown';
+  if(!filters.length) return 'matched';
   const results=filters.map(f=>{
     const values=bundle.values.filter(c=>c.key===f.key);
     // Repeated unresolved values must not silently become a favorable match.
