@@ -59,3 +59,6 @@ node --conditions=react-server --import tsx scripts/test-vault-pool.ts "$kg_test
 # Draft source reference path: receipt → immutable locator → structured evidence import.
 docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/migrations/20261002080000_draft_source_anchors.sql
 node --import tsx scripts/source-flow-fixture.ts | docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres
+# Literature search snapshots and RQ-linked acquisition planning.
+docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/migrations/20261002090000_literature_acquisition.sql
+docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres < tests/task6-literature.sql

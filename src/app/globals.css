@@ -5,3 +5,5 @@
 .science-fields select { width: 100%; padding: .65rem; }
 .science-fields input[type="checkbox"] { width: auto; margin-right: .5rem; }
 .science-fields details { margin-block: 1rem; }
+
+select{max-width:100%;font:inherit;padding:.65rem}.panel{overflow-wrap:anywhere}
