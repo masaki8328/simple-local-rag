@@ -62,3 +62,6 @@ node --import tsx scripts/source-flow-fixture.ts | docker exec -i "$kg_container
 # Literature search snapshots and RQ-linked acquisition planning.
 docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/migrations/20261002090000_literature_acquisition.sql
 docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres < tests/task6-literature.sql
+# Project-wide explicit identity mapping and independent human review records.
+docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/migrations/20261002100000_project_reaction_reviews.sql
+node --import tsx scripts/project-review-fixture.ts | docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres

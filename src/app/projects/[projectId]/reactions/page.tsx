@@ -1,0 +1,3 @@
+import Link from 'next/link';import {projectReactionDAL} from '../../../../server/project-reactions';import {ProjectReactions} from '../../../../components/project-reactions';import {Header,AccessState} from '../../../../components/access';
+export const dynamic='force-dynamic';
+export default async function Reactions({params}:{params:Promise<{projectId:string}>}){const {projectId}=await params;let data;try{data=await (await projectReactionDAL()).overview(projectId);}catch(e){return <main><Header/><AccessState error={e}/></main>;}return <main><Header/><Link href={`/projects/${projectId}`}>← プロジェクト</Link><h1>反応・根拠の統合と人によるレビュー</h1><ProjectReactions project={projectId} data={data}/></main>;}
