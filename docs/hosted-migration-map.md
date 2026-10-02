@@ -37,4 +37,8 @@ Follow-up root report: production `68ea60a` is READY. Hosted-app login was cance
 
 Root reports `20261002140245_research_handoff.sql` applied as hosted `20261002150644 / research_handoff`, exact SHA-256 `96e7b0375a869842131dcbed451c3266449c38f10a2bd5027e97cdfb6619e2ea`. Do not replay. This supersedes its earlier local-candidate status. Production code remains `68ea60a` per root. Credentials and Google setup are unchanged.
 
-Reviewed chemical proposal was promoted byte-for-byte using Supabase CLI `migration new` to `20261002150903_chemical_fields.sql`, SHA-256 `dbba5487a6bea35e1303116f739f9331554c0d5b5d4cd4b7e3fd861ddfc97f23`. This chemical migration is still LOCAL ONLY, pending root application; no hosted version is assigned here.
+Reviewed chemical proposal was promoted byte-for-byte using Supabase CLI `migration new` to `20261002150903_chemical_fields.sql`, SHA-256 `dbba5487a6bea35e1303116f739f9331554c0d5b5d4cd4b7e3fd861ddfc97f23`.
+
+## Root-reported chemical fields application — 2026-10-02
+
+Root reports successful live application as hosted `20261002153431 / chemical_fields`, corresponding to local `20261002150903_chemical_fields.sql` with the exact SHA-256 above. This supersedes the earlier local-only status. Do not replay. No hosted mutation, credential or access change was performed by this executor. Acquisition SQL remains under final review; publication is pending that review.
