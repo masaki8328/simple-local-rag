@@ -31,3 +31,5 @@ These tests use synthetic Google transport and application repositories; separat
 Private PDF attachment delivery remains blocked on an architecture decision. Current policy excludes a 100 MB Vercel proxy, and server Google credentials must not be exposed to the browser. A revision-pinned relay would change that hosting/bandwidth contract; a separate download service would add infrastructure. No paid service, public share, mutable download link or substitute inline viewer is introduced. The existing source-check operation verifies revision/hash but download still returns DOWNLOAD_UNPROVEN.
 
 This slice does not claim the later full research path is complete: structured evidence import and graph editing exist from Task 4, but verified PDF page/passage anchoring and clickable private PDF delivery require their own bounded follow-up. Storage alone never upgrades evidence or confirms a mechanism.
+
+Follow-up: [draft graph/source slice](source-graph-slice.md) adds checked private Drive viewer access without new infrastructure and fixes nested vault-pool acquisition. Byte-pinned download remains unavailable.

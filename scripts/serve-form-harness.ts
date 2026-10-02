@@ -6,6 +6,7 @@ import {resolve} from 'node:path';
 async function main(){
  const result=await build({entryPoints:['tests/browser/form-harness.tsx'],bundle:true,write:false,format:'iife',jsx:'automatic',define:{'process.env.NODE_ENV':'"development"'},plugins:[{name:'test-only-adapters',setup(build){
   build.onResolve({filter:/server\/actions$/},()=>({path:resolve('tests/browser/mock-actions.ts')}));
+  build.onResolve({filter:/^next\/link$/},()=>({path:resolve('tests/browser/mock-link.tsx')}));
   build.onResolve({filter:/^next\/navigation$/},()=>({path:resolve('tests/browser/mock-navigation.ts')}));
  }}]});
  const css=await readFile('src/app/globals.css');

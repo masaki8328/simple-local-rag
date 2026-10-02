@@ -1,0 +1,30 @@
+-- Local candidate: manually entered, explicitly UNVERIFIED immutable source locators.
+begin;
+create role kg_source_writer nologin nosuperuser nobypassrls noinherit;
+grant usage on schema public,kg_private to kg_source_writer;
+grant execute on function kg_private.caller_uid(),kg_private.has_role(uuid,text[]) to kg_source_writer;
+grant select on public.projects,public.papers,public.paper_documents,public.document_receipts,public.source_anchors to kg_source_writer;
+grant insert on public.source_anchors to kg_source_writer;
+create policy source_project_read on public.projects for select to kg_source_writer using(kg_private.has_role(id,array['owner']));
+create policy source_paper_read on public.papers for select to kg_source_writer using(kg_private.has_role(project_id,array['owner']));
+create policy source_document_read on public.paper_documents for select to kg_source_writer using(kg_private.has_role(project_id,array['owner']));
+create policy source_receipt_read on public.document_receipts for select to kg_source_writer using(kg_private.has_role(project_id,array['owner']));
+create policy source_anchor_read on public.source_anchors for select to kg_source_writer using(kg_private.has_role(project_id,array['owner']));
+create policy source_anchor_insert on public.source_anchors for insert to kg_source_writer with check(created_by=kg_private.caller_uid() and anchor_verified_at is null and extraction_run_id is null and kg_private.has_role(project_id,array['owner']));
+create function public.create_draft_source_anchor(p_project uuid,p_paper uuid,p_id uuid,p_document uuid,p_start integer,p_end integer,p_label text,p_passage text,p_section text,p_locator text,p_supersedes uuid default null) returns uuid language plpgsql security definer set search_path='' as $$declare old public.source_anchors;begin
+ if not kg_private.has_role(p_project,array['owner']) or not exists(select 1 from public.projects where id=p_project and archived_at is null) or not exists(select 1 from public.papers where project_id=p_project and id=p_paper and archived_at is null) or not exists(select 1 from public.paper_documents d join public.document_receipts r on r.project_id=d.project_id and r.id=d.document_receipt_id and r.paper_id=d.paper_id where d.project_id=p_project and d.id=p_document and d.paper_id=p_paper and r.state='stored_unparsed') then raise exception 'KG_FORBIDDEN';end if;
+ if p_start is null or p_end is null or p_start<1 or p_end<p_start or p_end>1000000 or p_passage is null or length(btrim(p_passage))=0 or length(p_passage)>16000 or p_label is null or length(p_label)>200 or p_section is null or length(p_section)>500 or p_locator is null or length(p_locator)>500 then raise exception 'KG_INVALID';end if;
+ if p_supersedes is not null and not exists(select 1 from public.source_anchors where project_id=p_project and id=p_supersedes and paper_document_id=p_document) then raise exception 'KG_FORBIDDEN';end if;
+ insert into public.source_anchors(id,project_id,paper_document_id,physical_page_start,physical_page_end,printed_page_label,verbatim_passage,passage_hash,section,figure_table_scheme,supersedes_anchor_id,created_by) values(p_id,p_project,p_document,p_start,p_end,p_label,p_passage,encode(sha256(convert_to(p_passage,'UTF8')),'hex'),p_section,p_locator,p_supersedes,kg_private.caller_uid()) on conflict(id) do nothing;
+ select * into old from public.source_anchors where id=p_id;
+ if not found or old.project_id<>p_project or old.paper_document_id<>p_document or old.physical_page_start<>p_start or old.physical_page_end<>p_end or old.printed_page_label is distinct from p_label or old.verbatim_passage<>p_passage or old.section is distinct from p_section or old.figure_table_scheme is distinct from p_locator or old.supersedes_anchor_id is distinct from p_supersedes then raise exception 'KG_CONFLICT';end if;
+ return old.id;
+end$$;
+revoke all on function public.create_draft_source_anchor(uuid,uuid,uuid,uuid,integer,integer,text,text,text,text,uuid) from public,anon,authenticated,service_role;
+grant execute on function public.create_draft_source_anchor(uuid,uuid,uuid,uuid,integer,integer,text,text,text,text,uuid) to authenticated;
+grant kg_source_writer to current_user with inherit false,set true;
+grant create on schema public to kg_source_writer;
+alter function public.create_draft_source_anchor(uuid,uuid,uuid,uuid,integer,integer,text,text,text,text,uuid) owner to kg_source_writer;
+revoke create on schema public from kg_source_writer;
+grant kg_source_writer to current_user with set false;
+commit;

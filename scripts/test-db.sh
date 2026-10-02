@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-# Disposable PostgreSQL only: no network, host ports, bind mounts or real data.
-kg_container=$(docker run --rm -d --network none --tmpfs /var/lib/postgresql/data -e POSTGRES_USER=bootstrap_admin -e POSTGRES_DB=postgres -e POSTGRES_HOST_AUTH_METHOD=trust postgres:17)
+# Disposable synthetic PostgreSQL, loopback-only random port for real node-pg pool regression. No mounts or real data.
+kg_container=$(docker run --rm -d -p 127.0.0.1::5432 --tmpfs /var/lib/postgresql/data -e POSTGRES_USER=bootstrap_admin -e POSTGRES_DB=postgres -e POSTGRES_HOST_AUTH_METHOD=trust postgres:17)
 trap 'docker rm -f "$kg_container" >/dev/null 2>&1 || true' EXIT
 for attempt in $(seq 1 30); do
  if docker exec "$kg_container" pg_isready -U bootstrap_admin -d postgres >/dev/null 2>&1; then break; fi
@@ -50,3 +50,12 @@ node --conditions=react-server --import tsx scripts/drive-worker-preflight.ts | 
 docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/migrations/20261002071500_drive_vault.sql
 docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres < tests/task5-vault.sql
 node --conditions=react-server --import tsx scripts/vault-preflight.ts | docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres
+docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres <<'SQL'
+create role kg_pool_test login nosuperuser nocreaterole nocreatedb nobypassrls inherit;
+grant kg_vault_worker to kg_pool_test with inherit true,set false;
+SQL
+kg_test_port=$(docker port "$kg_container" 5432/tcp | cut -d: -f2)
+node --conditions=react-server --import tsx scripts/test-vault-pool.ts "$kg_test_port"
+# Draft source reference path: receipt → immutable locator → structured evidence import.
+docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/migrations/20261002080000_draft_source_anchors.sql
+node --import tsx scripts/source-flow-fixture.ts | docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres

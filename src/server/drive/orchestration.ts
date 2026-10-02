@@ -12,7 +12,7 @@ export function composeDriveService(deps:{client:SupabaseClient;worker:DriveWork
  return new DriveService(driveRepository(deps.client,deps.worker),deps.adapter??new GoogleDriveAdapter(deps.tokens),deps.sessions);
 }
 const begin=driveInput.extend({action:z.literal('begin')});
-const command=z.strictObject({action:z.enum(['session','complete','cancel','status','download']),id:uuid});
+const command=z.strictObject({action:z.enum(['session','complete','cancel','status','download','viewer']),id:uuid});
 const requestSchema=z.union([begin,command,z.strictObject({action:z.literal('list'),projectId:uuid,paperId:uuid})]);
 async function jsonBody(request:Request){if(request.headers.get('content-type')?.split(';')[0].trim().toLowerCase()!=='application/json')throw new DriveError('CONFLICT');const reader=request.body?.getReader();if(!reader)throw new DriveError('CONFLICT');const parts:Uint8Array[]=[];let length=0;try{while(true){const r=await reader.read();if(r.done)break;length+=r.value.length;if(length>16384)throw new DriveError('OVERSIZE');parts.push(r.value);}}finally{await reader.cancel().catch(()=>{});}try{return JSON.parse(Buffer.concat(parts,length).toString('utf8'));}catch{throw new DriveError('CONFLICT');}}
 const headers={'Cache-Control':'private, no-store','Referrer-Policy':'no-referrer'};
@@ -27,6 +27,7 @@ export function driveHandler(factory:()=>DriveService|Promise<DriveService>,trus
   if(body.action==='complete')return Response.json(await service.complete(body.id),{headers});
   if(body.action==='cancel'){await service.cancel(body.id);return Response.json({cancelled:true},{headers});}
   if(body.action==='status')return Response.json(await service.status(body.id),{headers});
+  if(body.action==='viewer')return Response.json(await service.viewer(body.id),{headers});
   await service.download(body.id);throw new DriveError('DOWNLOAD_UNPROVEN');
  }catch(e){const code=e instanceof DriveError?e.code:'RETRYABLE';const status=code==='FORBIDDEN'?403:code==='CONFLICT'||code==='CANCELLED'?409:code==='EXPIRED'?410:code==='OVERSIZE'?413:503;return Response.json({error:code},{status,headers});}};
 }
