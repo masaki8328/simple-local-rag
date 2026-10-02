@@ -24,13 +24,13 @@ Task 2 is complete locally and saved as a local-only milestone commit; the verif
 | `npm run typecheck` | PASS | Strict TypeScript |
 | `npm test` | PASS: 43 domain tests | Phase 1 scientific invariants preserved |
 | `npm run test:app` | PASS: 24 tests | Injected gateway/claims, strict inputs, tenant scope, safe errors and unconfigured actions; not hosted Auth |
-| `npm run test:db` | PASS: 81 SQL assertions + 2 concurrent transaction checks | 45 C1 + 36 Task2; real isolated PostgreSQL grants/RLS/triggers/transactions with identity shim |
+| `npm run test:db` | PASS: 95 SQL assertions + 1 managed-role preflight + 2 concurrent transaction checks | 45 C1 + 50 Task2; migrations use a real NOSUPERUSER session; identity shim, isolated PostgreSQL grants/RLS/triggers/transactions |
 | `NEXT_TELEMETRY_DISABLED=1 npm run build` | PASS | All private routes dynamic; proxy builds |
 | `npm run test:smoke` | PASS: 3 checks | Unconfigured no-store page and two synthetic demo modes |
 | `npm run test:browser` | PASS: 8 tests | Chromium desktop and 390px mobile; no horizontal overflow; screenshots inspected |
 | `git diff --check` | PASS | No whitespace errors |
 | Hosted Auth/REST/refresh/revocation/cross-user browser E2E | NOT RUN | No configured client or authorized live setup |
-| Managed Supabase migration-role permissions | NOT RUN | Local superuser DDL tests do not prove hosted CREATE ROLE/ownership permissions |
+| Managed-role simulation | PASS | NOSUPERUSER/CREATEROLE/BYPASSRLS postgres session, empty createrole_self_grant, public owned by pg_database_owner; hosted execution remains NOT RUN |
 | PDF/Storage, real research, signup emails, provider search | NOT IMPLEMENTED / NOT RUN | Outside Task 2 |
 
 The browser harness uses the actual form components but substitutes test-only actions/navigation in a separately compiled localhost page. It verifies pending disable, one submission and preservation of title/notes after a conflict. It does not establish that a real authenticated app update succeeds, cookies refresh correctly, or server-driven revision remounts work end-to-end. Real unconfigured app routes and the synthetic demo were tested without fakes. Mobile screenshots of both the real unconfigured page and form harness were visually inspected.
@@ -46,3 +46,15 @@ SQL DOI prefix normalization was corrected to trim first, matching application b
 See [Task 2 setup](task2-setup.md) for the precise owner-account, public configuration, migration privilege and hosted validation steps. No secrets should be supplied in chat. Public project selection is not authorization to apply migrations. In particular, validate managed PostgreSQL role creation/ownership transfer before approving the SQL; do not work around failure with an RLS-bypassing metadata writer. The root-controlled review bundle includes both exact migration files and hashes.
 
 The initial DOI is read-only after creation in this slice; identifier correction requires a future provenance-aware workflow. Lists target small owner-only projects and do not yet expose pagination. Bootstrap is a narrow authenticated definer operation; metadata CRUD remains RLS-bound and never uses a service-role client. Full session lifecycle, password-sign-in behavior, auth errors, post-login empty states and successful metadata navigation need live synthetic E2E verification before real research use.
+
+## Managed-role portability correction and release review
+
+The original migration was reproduced failing under the reported administrative role flags with `must be able to SET ROLE "kg_metadata_writer"`. Earlier superuser-only DDL validation masked this defect. The corrected migration supplies a transactional SET/CREATE bridge for exactly five ownership transfers and revokes it before commit, retaining creator ADMIN with INHERIT/SET false. A residual-effective-privilege guard aborts the transaction if CREATE, SET or inherited writer rights remain. Both migrations now apply under a genuine non-superuser connection (current_user=session_user=postgres), not SET ROLE beneath a superuser session.
+
+The disposable test setup has public owned by pg_database_owner with explicit postgres USAGE, database ownership inherited through pg_database_owner, and empty createrole_self_grant. Auth shim privileges (USAGE/REFERENCES and auth.uid execution with grant option) are explicit test assumptions; actual hosted ACLs still need root verification. Test assertions run separately as bootstrap_admin to switch roles, with writer tenant RLS exercised explicitly. Adversarial anon/authenticated defaults and simulated service_role defaults are present. Service-role administrative access is reported rather than incorrectly claimed absent.
+
+New checks cover absence of writer CREATE/table ownership/privileged memberships/application-role assumption, no residual migration-actor SET/inherited rights, retained creator ADMIN, disabled document/provenance client writes, and archived-project identical create replay returning KG_ARCHIVED. Every rejected authenticated operation compares all visible project/paper/identifier/audit state before and after; final administrative assertions verify exact audit cardinality (10 successful mutations only) and unchanged paper state across the entire sequence, including cross-user attempts. Concurrent create/edit tests still pass.
+
+Both migration files are a single release gate: do not provision/configure an app account after C1 alone. The PDF lifecycle, authoritative actual-object verification, source-anchor same-document/acyclic supersession and distinct-work override remain deferred as detailed in task2-setup.md. No live SQL, push, deployment, secrets or accounts were performed for this correction.
+
+Independent read-only re-review of this correction found no material security blocker; it confirmed the transactional privilege bridge, fail-closed cleanup, disabled provenance writes and separation of migration/test identities. The reviewer did not rerun tests or execute hosted SQL. Hosted ACL compatibility and user approval remain release prerequisites. Domain (43), application (24), lint and shell syntax checks were rerun and passed for this correction; unchanged build/browser results above are from the Task 2 milestone.

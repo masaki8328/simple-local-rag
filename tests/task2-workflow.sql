@@ -2,9 +2,19 @@
 begin;
 create function pg_temp.assert_true(ok boolean,label text) returns void language plpgsql as $$ begin if ok is distinct from true then raise exception 'FAIL: %',label; end if; raise notice 'PASS: %',label; end $$;
 create function pg_temp.expect_error(statement text,expected text,label text) returns void language plpgsql as $$
+declare before_state jsonb; after_state jsonb;
 begin
+ if current_user<>'anon' then
+ select jsonb_build_array((select jsonb_agg(to_jsonb(p) order by id) from public.projects p),(select jsonb_agg(to_jsonb(p) order by id) from public.papers p),(select jsonb_agg(to_jsonb(p) order by id) from public.paper_identifiers p),(select jsonb_agg(to_jsonb(a) order by id) from public.audit_events a)) into before_state;
+ end if;
  begin execute statement; exception when others then
-  if sqlerrm=expected or sqlstate=expected then raise notice 'PASS: %',label; return; end if;
+  if sqlerrm=expected or sqlstate=expected then
+   if current_user<>'anon' then
+   select jsonb_build_array((select jsonb_agg(to_jsonb(p) order by id) from public.projects p),(select jsonb_agg(to_jsonb(p) order by id) from public.papers p),(select jsonb_agg(to_jsonb(p) order by id) from public.paper_identifiers p),(select jsonb_agg(to_jsonb(a) order by id) from public.audit_events a)) into after_state;
+   end if;
+   if before_state is distinct from after_state then raise exception 'FAIL: rejected write changed state/audit: %',label; end if;
+   raise notice 'PASS: %',label; return;
+  end if;
   raise exception 'FAIL: % expected %, got %: %',label,expected,sqlstate,sqlerrm;
  end;
  raise exception 'FAIL: % did not reject',label;
@@ -36,6 +46,10 @@ select public.edit_project(:'project',1,'SYNTHETIC revised project','');
 select pg_temp.expect_error(format('select public.edit_project(%L,1,''stale'','''')',:'project'),'KG_CONFLICT','stale project edit rejected');
 select public.archive_project(:'project',2,true);
 select pg_temp.expect_error(format('select public.create_paper(%L,gen_random_uuid(),''SYNTHETIC archived'','''',2026,'''','''')',:'project'),'KG_ARCHIVED','archived project rejects paper creation');
+select pg_temp.expect_error(format('select public.create_paper(%L,''20000000-0000-4000-8000-000000000001'',''SYNTHETIC Paper'','''',2026,'''',''10.1234/synthetic'')',:'project'),'KG_ARCHIVED','identical create replay on archived project rejects before replay');
+select pg_temp.expect_error('insert into public.document_assets default values','42501','document staging insert disabled');
+select pg_temp.expect_error('insert into public.paper_documents default values','42501','paper document insert disabled');
+select pg_temp.expect_error('insert into public.source_anchors default values','42501','source anchor insert disabled');
 select public.archive_project(:'project',3,false);
 select pg_temp.assert_true((select archived_at is null and revision=4 from public.projects where id=:'project'),'project restore retains record');
 select pg_temp.expect_error(format('insert into public.papers(project_id,title,normalized_title,analysis_status) values(%L,''bypass'',''forged'',''analyzed'')',:'project'),'42501','direct paper insert cannot bypass validation');
@@ -55,6 +69,17 @@ reset role;
 select pg_temp.assert_true((select not rolcanlogin and not rolbypassrls from pg_roles where rolname='kg_metadata_writer'),'workflow role has no login and no RLS bypass');
 select pg_temp.assert_true(not pg_has_role('authenticated','kg_metadata_writer','MEMBER'),'authenticated cannot assume workflow role');
 select pg_temp.assert_true((select count(*)=5 from pg_proc p join pg_roles r on r.oid=p.proowner where r.rolname='kg_metadata_writer' and p.prosecdef and p.proconfig @> array['search_path=""']),'five RPCs have restricted owner and empty search path');
+select pg_temp.assert_true(not has_schema_privilege('kg_metadata_writer','public','CREATE'),'writer has no effective public CREATE');
+select pg_temp.assert_true(not pg_has_role('postgres','kg_metadata_writer','SET') and not pg_has_role('postgres','kg_metadata_writer','USAGE'),'migration actor retains neither SET nor inherited writer rights');
+select pg_temp.assert_true(exists(select from pg_auth_members where roleid='kg_metadata_writer'::regrole and member='postgres'::regrole and admin_option),'creator ADMIN retained for future reviewed migrations');
+select pg_temp.assert_true(not exists(select from pg_class where relowner='kg_metadata_writer'::regrole),'writer owns no table or relation');
+select pg_temp.assert_true(not exists(select from pg_auth_members where member='kg_metadata_writer'::regrole),'writer inherits no privileged memberships');
+select pg_temp.assert_true(not exists(select from pg_roles where rolname in ('anon','authenticated','authenticator','service_role') and pg_has_role(oid,'kg_metadata_writer','MEMBER')),'no application role can assume writer');
+select pg_temp.assert_true(not exists(select from pg_roles r cross join (values('document_assets'),('paper_documents'),('source_anchors')) t(name) where r.rolname in ('anon','authenticated') and (has_table_privilege(r.oid,'public.'||t.name,'INSERT') or has_table_privilege(r.oid,'public.'||t.name,'UPDATE') or has_table_privilege(r.oid,'public.'||t.name,'DELETE'))),'PDF provenance tables have no client mutation grants');
+-- Service-role defaults are deliberately present: it is privileged, never an app client.
+select pg_temp.assert_true(has_table_privilege('service_role','public.document_assets','INSERT'),'service role administrative access is explicit in simulation, not falsely denied');
+select pg_temp.assert_true((select count(*)=10 from public.audit_events),'exact audit cardinality: only successful mutations, no create-replay or rejection events');
+select pg_temp.assert_true((select count(*)=1 from public.papers) and (select title='SYNTHETIC revised' and revision=4 and archived_at is null from public.papers where id=:'paper'),'full administrative view confirms rejected writes preserved paper state');
 -- Exercise writer RLS directly as the test admin, with user B JWT still active.
 set role kg_metadata_writer;
 select pg_temp.assert_true((select count(*)=0 from public.papers),'workflow role itself remains constrained by tenant RLS');

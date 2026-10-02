@@ -132,12 +132,19 @@ end $$;
 -- Metadata mutations run as a non-login, non-table-owner role that remains subject to RLS.
 -- No service-role client and no direct authenticated metadata writes.
 create role kg_metadata_writer nologin noinherit nobypassrls;
+-- PostgreSQL 17 CREATEROLE alone gives creator ADMIN, not SET when
+-- createrole_self_grant is empty. Keep only the creator ADMIN after transfer.
+grant kg_metadata_writer to current_user with inherit false;
+grant kg_metadata_writer to current_user with set true;
+grant create on schema public to kg_metadata_writer;
 grant usage on schema public,kg_private,auth to kg_metadata_writer;
 grant execute on function auth.uid(),kg_private.has_role(uuid,text[]),kg_private.normalized_title(text),kg_private.validate_paper(text,text,integer,text),kg_private.require_owner(uuid,boolean) to kg_metadata_writer;
 grant select on public.projects,public.papers,public.paper_identifiers to kg_metadata_writer;
 grant insert on public.papers,public.paper_identifiers to kg_metadata_writer;
 grant update on public.projects,public.papers to kg_metadata_writer;
 revoke insert,update on public.projects,public.papers,public.paper_identifiers from authenticated;
+-- No client staging/provenance writes until the PDF verification lifecycle is reviewed.
+revoke insert,update,delete on public.document_assets,public.paper_documents,public.source_anchors from authenticated;
 alter policy member_read on public.projects to authenticated,kg_metadata_writer;
 alter policy member_read on public.papers to authenticated,kg_metadata_writer;
 alter policy member_read on public.paper_identifiers to authenticated,kg_metadata_writer;
@@ -153,4 +160,17 @@ begin
   execute 'alter function '||signature||' owner to kg_metadata_writer';
  end loop;
 end $$;
+revoke create on schema public from kg_metadata_writer;
+grant kg_metadata_writer to current_user with set false;
+-- Fail the transaction if inherited schema defaults leave effective CREATE behind.
+do $$
+begin
+ if has_schema_privilege('kg_metadata_writer','public','CREATE')
+    or pg_has_role(current_user,'kg_metadata_writer','SET')
+    or pg_has_role(current_user,'kg_metadata_writer','USAGE') then
+  raise exception 'Unsafe residual metadata-writer privileges';
+ end if;
+end $$;
+-- Future ownership changes must explicitly re-establish SET and temporary CREATE,
+-- then remove both within their transaction. Never grant writer to application roles.
 commit;
