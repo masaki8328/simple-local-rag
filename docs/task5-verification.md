@@ -1,3 +1,7 @@
+# Original Task 5 checkpoint verification
+
+For the later unpublished patch and independent review, see `task5-patch-review.md`.
+
 # Task 5 verification — local synthetic checkpoint
 
 - Domain/protocol tests: 59 passed.
