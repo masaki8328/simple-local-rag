@@ -6,6 +6,7 @@ begin
  if current_setting('createrole_self_grant')<>'' then raise exception 'Unexpected automatic role grants'; end if;
  if (select nspowner from pg_namespace where nspname='public')<>'pg_database_owner'::regrole then raise exception 'Wrong public schema owner'; end if;
  if not has_schema_privilege(current_user,'public','CREATE') then raise exception 'Missing database-owner CREATE'; end if;
+ if not has_schema_privilege(current_user,'auth','USAGE') or has_schema_privilege(current_user,'auth','USAGE WITH GRANT OPTION') or not has_function_privilege(current_user,'auth.uid()','EXECUTE') or has_function_privilege(current_user,'auth.uid()','EXECUTE WITH GRANT OPTION') then raise exception 'Wrong auth ACL simulation'; end if;
  raise notice 'PASS: real non-superuser session, CREATEROLE/BYPASSRLS, empty self-grant, pg_database_owner public schema';
 end $$;
 select current_user,session_user,current_setting('createrole_self_grant'),nspname,nspowner::regrole,nspacl from pg_namespace where nspname='public';

@@ -24,11 +24,15 @@ create function kg_private.validate_paper(p_title text,p_journal text,p_year int
 begin
  if p_title is null or kg_private.normalized_title(p_title)='' or length(p_title)>500 or p_journal is null or length(p_journal)>500 or p_notes is null or length(p_notes)>10000 or (p_year is not null and (p_year<1000 or p_year>extract(year from now())+1)) then raise exception 'KG_INVALID'; end if;
 end; $$;
+-- Narrow identity bridge: writer requires no auth schema privileges or grant options.
+create function kg_private.caller_uid() returns uuid language sql stable security definer set search_path='' as $$ select auth.uid() $$;
+revoke all on function kg_private.caller_uid() from public,anon,authenticated,service_role;
+grant execute on function kg_private.caller_uid() to authenticated;
 create function kg_private.require_owner(p_project_id uuid,p_active boolean) returns void language plpgsql security invoker set search_path='' as $$
 declare archived timestamptz;
 begin
- if auth.uid() is null or not kg_private.has_role(p_project_id,array['owner']) then raise exception 'KG_FORBIDDEN'; end if;
- select archived_at into archived from public.projects where id=p_project_id and owner_user_id=auth.uid();
+ if kg_private.caller_uid() is null or not kg_private.has_role(p_project_id,array['owner']) then raise exception 'KG_FORBIDDEN'; end if;
+ select archived_at into archived from public.projects where id=p_project_id and owner_user_id=kg_private.caller_uid();
  if not found then raise exception 'KG_FORBIDDEN'; end if;
  if p_active and archived is not null then raise exception 'KG_ARCHIVED'; end if;
 end; $$;
@@ -86,9 +90,9 @@ begin
  end if;
  if normalized_doi<>'' and exists(select 1 from public.paper_identifiers where project_id=p_project_id and provider='doi' and normalized_value=normalized_doi) then raise exception 'KG_DUPLICATE_DOI'; end if;
  if exists(select 1 from public.papers where project_id=p_project_id and normalized_title=kg_private.normalized_title(p_title)) then raise exception 'KG_DUPLICATE_TITLE'; end if;
- insert into public.papers(project_id,title,normalized_title,journal,year,notes,creation_request_id,creation_request_hash) values(p_project_id,p_title,kg_private.normalized_title(p_title),nullif(p_journal,''),p_year,nullif(p_notes,''),p_request_id,content_hash) returning id into result;
+ insert into public.papers(project_id,title,normalized_title,journal,year,notes,creation_request_id,creation_request_hash,created_by) values(p_project_id,p_title,kg_private.normalized_title(p_title),nullif(p_journal,''),p_year,nullif(p_notes,''),p_request_id,content_hash,kg_private.caller_uid()) returning id into result;
  if normalized_doi<>'' then
-  insert into public.paper_identifiers(project_id,paper_id,provider,raw_value,normalized_value,source,retrieved_at) values(p_project_id,result,'doi',p_doi,normalized_doi,'human_entry',now());
+  insert into public.paper_identifiers(project_id,paper_id,provider,raw_value,normalized_value,source,retrieved_at,created_by) values(p_project_id,result,'doi',p_doi,normalized_doi,'human_entry',now(),kg_private.caller_uid());
  end if;
  return result;
 end; $$;
@@ -137,8 +141,8 @@ create role kg_metadata_writer nologin noinherit nobypassrls;
 grant kg_metadata_writer to current_user with inherit false;
 grant kg_metadata_writer to current_user with set true;
 grant create on schema public to kg_metadata_writer;
-grant usage on schema public,kg_private,auth to kg_metadata_writer;
-grant execute on function auth.uid(),kg_private.has_role(uuid,text[]),kg_private.normalized_title(text),kg_private.validate_paper(text,text,integer,text),kg_private.require_owner(uuid,boolean) to kg_metadata_writer;
+grant usage on schema public,kg_private to kg_metadata_writer;
+grant execute on function kg_private.caller_uid(),kg_private.has_role(uuid,text[]),kg_private.normalized_title(text),kg_private.validate_paper(text,text,integer,text),kg_private.require_owner(uuid,boolean) to kg_metadata_writer;
 grant select on public.projects,public.papers,public.paper_identifiers to kg_metadata_writer;
 grant insert on public.papers,public.paper_identifiers to kg_metadata_writer;
 grant update on public.projects,public.papers to kg_metadata_writer;
@@ -150,8 +154,8 @@ alter policy member_read on public.papers to authenticated,kg_metadata_writer;
 alter policy member_read on public.paper_identifiers to authenticated,kg_metadata_writer;
 alter policy owner_update on public.projects to authenticated,kg_metadata_writer;
 alter policy editor_update on public.papers to authenticated,kg_metadata_writer;
-alter policy editor_insert on public.papers to authenticated,kg_metadata_writer;
-alter policy editor_insert on public.paper_identifiers to authenticated,kg_metadata_writer;
+alter policy editor_insert on public.papers to authenticated,kg_metadata_writer with check(created_by=(select kg_private.caller_uid()) and kg_private.has_role(project_id,array['owner','editor']));
+alter policy editor_insert on public.paper_identifiers to authenticated,kg_metadata_writer with check(created_by=(select kg_private.caller_uid()) and kg_private.has_role(project_id,array['owner','editor']));
 do $$
 declare signature text;
 begin

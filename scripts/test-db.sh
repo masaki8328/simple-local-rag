@@ -13,9 +13,9 @@ docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d 
 create role postgres login nosuperuser createrole bypassrls;
 alter database postgres owner to postgres;
 grant usage on schema public to postgres;
-grant usage on schema auth to postgres with grant option;
+grant usage on schema auth to postgres;
 grant references,select on auth.users to postgres;
-grant execute on function auth.uid() to postgres with grant option;
+-- auth.uid has PUBLIC EXECUTE, but postgres has no grant option.
 grant authenticated,anon to postgres;
 create role service_role nologin bypassrls;
 create role authenticator nologin;

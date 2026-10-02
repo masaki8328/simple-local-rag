@@ -80,6 +80,14 @@ select pg_temp.assert_true(not exists(select from pg_roles r cross join (values(
 select pg_temp.assert_true(has_table_privilege('service_role','public.document_assets','INSERT'),'service role administrative access is explicit in simulation, not falsely denied');
 select pg_temp.assert_true((select count(*)=10 from public.audit_events),'exact audit cardinality: only successful mutations, no create-replay or rejection events');
 select pg_temp.assert_true((select count(*)=1 from public.papers) and (select title='SYNTHETIC revised' and revision=4 and archived_at is null from public.papers where id=:'paper'),'full administrative view confirms rejected writes preserved paper state');
+select pg_temp.assert_true(not has_schema_privilege('kg_metadata_writer','auth','USAGE'),'writer has no auth schema USAGE');
+select pg_temp.assert_true((select p.proowner='postgres'::regrole and p.prosecdef and p.provolatile='s' and p.pronargs=0 and p.proconfig @> array['search_path=""'] and btrim(p.prosrc)='select auth.uid()' from pg_proc p where p.oid='kg_private.caller_uid()'::regprocedure),'identity bridge is exactly stable no-argument auth.uid with fixed search path and administrator owner');
+select pg_temp.assert_true(not has_function_privilege('anon','kg_private.caller_uid()','EXECUTE') and not has_function_privilege('service_role','kg_private.caller_uid()','EXECUTE') and has_function_privilege('authenticated','kg_private.caller_uid()','EXECUTE') and has_function_privilege('kg_metadata_writer','kg_private.caller_uid()','EXECUTE'),'identity bridge execution limited to writer and authenticated');
+set role authenticated;
+select set_config('request.jwt.claim.sub','',false);
+select pg_temp.expect_error(format('select public.edit_project(%L,4,''null identity'','''')',:'project'),'KG_FORBIDDEN','null caller cannot mutate through identity bridge');
+reset role;
+select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false);
 -- Exercise writer RLS directly as the test admin, with user B JWT still active.
 set role kg_metadata_writer;
 select pg_temp.assert_true((select count(*)=0 from public.papers),'workflow role itself remains constrained by tenant RLS');
