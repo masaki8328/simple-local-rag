@@ -30,3 +30,6 @@ supabase/.temp/
 
 # Local deployment links and credentials
 .vercel/
+
+# Reproducible pinned RDKit build assets; no research inputs
+public/chemistry/vendor/

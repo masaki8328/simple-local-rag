@@ -172,6 +172,83 @@
                       "hypothetical",
                       "unspecified"
                     ]
+                  },
+                  "structure": {
+                    "type": "object",
+                    "properties": {
+                      "schema_version": {
+                        "type": "string",
+                        "const": "chemical-structure/0.1"
+                      },
+                      "smiles": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "inchi": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 4096,
+                            "pattern": "^InChI=1S?\\/[^\\s<>]+$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "cas": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "representation": {
+                        "type": "string",
+                        "enum": [
+                          "ground_state",
+                          "transition_state",
+                          "unknown"
+                        ]
+                      },
+                      "source_anchor_id": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "attribution": {
+                        "type": "string",
+                        "enum": [
+                          "authors",
+                          "analyst",
+                          "not_reported"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "schema_version",
+                      "smiles",
+                      "inchi",
+                      "cas",
+                      "representation",
+                      "source_anchor_id",
+                      "attribution"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [
@@ -192,6 +269,76 @@
             "reaction": {
               "type": "object",
               "properties": {
+                "description": {
+                  "type": "object",
+                  "properties": {
+                    "schema_version": {
+                      "type": "string",
+                      "const": "reaction-description/0.1"
+                    },
+                    "reaction_type": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "reversibility": {
+                      "type": "string",
+                      "enum": [
+                        "reversible",
+                        "irreversible",
+                        "unknown"
+                      ]
+                    },
+                    "description": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 8000
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "source_anchor_id": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "attribution": {
+                      "type": "string",
+                      "enum": [
+                        "authors",
+                        "analyst",
+                        "not_reported"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "schema_version",
+                    "reaction_type",
+                    "reversibility",
+                    "description",
+                    "source_anchor_id",
+                    "attribution"
+                  ],
+                  "additionalProperties": false
+                },
                 "id": {
                   "type": "string",
                   "format": "uuid",

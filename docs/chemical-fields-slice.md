@@ -1,0 +1,39 @@
+# Explicit chemical structures and mechanism descriptions
+
+Local delta after `61b04343e21bcf1bfb436a9f1cfc3882741a98f3`. This implements the explicitly requested scientific fields; they are not cancelled or silently deferred as optional product scope. A missing value remains optional/unknown in a particular source record.
+
+## Data and editor
+
+Compounds accept an optional `structure` object tagged `chemical-structure/0.1`: raw SMILES, InChI, CAS, ground-state/transition-state/unknown representation, source-anchor ID and authors/analyst/not-reported attribution. Reactions accept an optional `description` tagged `reaction-description/0.1`: reaction type, reversible/irreversible/unknown, mechanism text, source-anchor ID and attribution. Human editors explicitly add these fields; merely opening an old case does not manufacture values. Existing research-case/0.1 inputs without extensions remain valid and preserve their bytes/data. Each edit is a new immutable case/entity version; AI remains staged, idempotent and unable to overwrite a human version.
+
+Anchor references must belong to the same project and paper. Source links open the existing page/passage/PDF-version path. Author/review/created-at metadata stays on the case version and independent scientific review records. New fields cannot embed `human_reviewed` or bypass that review workflow. A structure diagram is never treated as evidence of existence, and a mechanism description never changes claim scope or edge strength. Separate structure/mechanism anchors record provenance, but their presence alone does not attest a passage; the UI does not label them verified. Existing scientific acceptance primarily reviews the evidence claim and its source, not an automatic field-by-field structure certification.
+
+Structural identity comparison includes exact supplied SMILES/InChI/CAS/representation alongside stereo, charge, protonation, polymer/free context and node type. Different spellings are not automatically canonicalized into one identity. Existing SQL identity mapping is even more conservative and compares the full extension, including provenance; matching identifiers do not trigger a merge. Names never cause lookup, structure assignment or merging. Reversibility is a recorded property, not an automatic reverse reaction or a new reverse-evidence arrow.
+
+## Deterministic depiction and limits
+
+Dependency: exactly `@rdkit/rdkit@2026.3.6`, the [official RDKit JavaScript distribution](https://github.com/rdkit/rdkit-js), built from RDKit MinimalLib. [Official documentation](https://rdkitjs.com/), [BSD 3-Clause license](https://github.com/rdkit/rdkit/blob/master/license.txt). The license is distributed at `public/chemistry/RDKit-LICENSE.txt`. Pinned npm assets are copied locally during prebuild/predev; no CDN, model, chemistry lookup service or external molecule request is used. Generated JS/WASM build copies are ignored in Git; the lockfile pins their package integrity.
+
+A same-origin worker sanitizes a supplied SMILES with RDKit, verifies `is_valid()`, limits it to 128 atoms, generates deterministic 2D coordinates, and returns an SVG image. Only images are displayed (Blob image URLs / SVG image elements), never `dangerouslySetInnerHTML`. Escaped names and descriptions remain React text. Input is restricted to a bounded SMILES alphabet for depiction; XML/HTML, CXSMILES extension annotations and unsupported repeat syntax do not render.
+
+Limits: 4096 characters may be retained as the raw identifier; depiction requires at most 1024 characters, 128 atoms and 512 KiB output. One disposable worker executes at a time; at most 16 requests wait, each with an eight-second deadline including its queue wait; a 32-entry in-memory cache avoids repeat drawings. Timeout/error/invalid/unsupported/oversized states show an explicit unavailable diagram and preserve the supplied record. Wasm objects and Blob URLs are released. Slow devices may hit the deadline instead of receiving a drawing.
+
+Stereochemical bonds and formal charges come from the supplied SMILES. No stereochemistry, protonation, polymer extent, transition-state geometry or atom mapping is invented. Hypothetical and transition-state labels remain explicit. Polymer records can depict a provided finite fragment within bounds; repeating/large structures fail visibly. InChI is syntax-checked, CAS has format/checksum validation; neither is resolved against a registry or verified to agree with SMILES/name/formula/charge. Raw invalid SMILES may be retained for correction but never receives a successful diagram. Depiction validity is not scientific validity.
+
+Graph nodes show structural thumbnails when available; selected nodes show a larger diagram and identifiers/provenance. Mobile node selection centers the node at readable scale, with search, zoom/pan and a detailed inspector. Full-network fit is necessarily smaller. Reaction selection exposes type, reversibility and mechanism text, without changing evidence-based line styles.
+
+## Local SQL proposal, not a migration
+
+`supabase/proposals/chemical-fields.sql` extends existing JSON validators and checks source ownership/CAS checksums. No migration was created or applied to hosted data. No existing immutable records, table definitions, grants or persistent login access are changed by the proposal. Temporary owner-role access used to replace the existing function is restored within the transaction. It preserves the import function's owner, ACLs, fixed search path and SECURITY DEFINER boundary.
+
+Regenerate with `node --import tsx scripts/generate-chemical-proposal.ts`. Test only in disposable PostgreSQL with `KG_CHEMICAL_PROPOSAL=1 npm run test:db`. Until root reviews/converts/applies the SQL through its release workflow, the existing hosted validator will reject extension-bearing writes; this source delta must not be described as live persistence support. The existing hosted migration map is unchanged.
+
+## Included narrow RQ integrity fixes
+
+Saved-answer evidence now excludes archived/missing papers as well as archived cases. Owner-scoped reads use stable ID pagination with exact counts; changed counts, missing pages, duplicate IDs, or bounds violations fail closed. Any answer-linked version missing from the complete result is explicitly invalid. Complete source-anchor history catches superseding anchors; latest review and attestation records govern freshness. Focused fixtures cover paper archive, incomplete capped reads, one-row server caps and missing linked evidence. These read-side changes require no SQL migration.
+
+## Verification evidence
+
+Passed: 98 app/server tests (including the narrow RQ archive/cap regressions); 83 domain tests plus the subsequent four-test chemical regression run adding nonoverlapping thumbnail layout; 248 PostgreSQL assertions and six concurrency/pool checks with the explicit local-proposal opt-in; typecheck, lint and production build. Existing handoff desktop/mobile checks passed. Chemical desktop/mobile checks use real local RDKit/WASM and cover charged/stereochemical depiction, HTML escaping, invalid valence, missing structures, 1025-character and 129-atom bounds, editor payloads, graph thumbnails/selected inspector, responsive layout, and a deliberately stuck worker that is terminated without freezing input. Case-save requests in browser tests are intercepted; persistence/source-ownership checks are real disposable PostgreSQL tests, not a hosted E2E claim.
+
+Actual 390px mobile detail and graph screenshots were inspected. Visual review found tall-node overlap and label overflow; row spacing and bounded labels were corrected, regression-tested, and the resulting screenshot re-inspected. No hosted Auth login was attempted, no secrets were handled, no migration was created, and nothing was pushed or deployed.

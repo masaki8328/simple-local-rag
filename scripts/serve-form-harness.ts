@@ -10,7 +10,8 @@ async function main(){
   build.onResolve({filter:/^next\/navigation$/},()=>({path:resolve('tests/browser/mock-navigation.ts')}));
  }}]});
  const css=await readFile('src/app/globals.css');
- const server=createServer((req,res)=>{
+ const server=createServer(async(req,res)=>{
+  if(req.url&&/^\/chemistry\/(worker\.js|vendor\/RDKit_minimal\.(js|wasm))$/.test(req.url)){res.setHeader('Content-Type',req.url.endsWith('.wasm')?'application/wasm':'text/javascript');res.end(await readFile('public'+req.url));return;}
   if(req.url==='/bundle.js'){res.setHeader('Content-Type','text/javascript');res.end(result.outputFiles[0].contents);}
   else if(req.url==='/style.css'){res.setHeader('Content-Type','text/css');res.end(css);}
   else {res.setHeader('Content-Type','text/html');res.end('<!doctype html><html lang="ja"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/style.css"><div id="root"></div><script src="/bundle.js"></script></html>');}

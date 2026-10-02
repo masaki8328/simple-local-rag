@@ -1,0 +1,5 @@
+/* global importScripts, initRDKitModule */
+// Same-origin worker. No remote chemistry service or molecule-name resolution.
+importScripts('/chemistry/vendor/RDKit_minimal.js');
+const ready=initRDKitModule({locateFile:file=>'/chemistry/vendor/'+file,print:()=>{},printErr:()=>{}});
+self.onmessage=async({data})=>{let mol;try{const s=data.smiles;if(typeof s!=='string'||s.length>1024||!/^[A-Za-z0-9@+\-\[\]()\\/%=#$:.*]+$/.test(s))throw Error('unsupported');const rdkit=await ready;mol=rdkit.get_mol(s,JSON.stringify({sanitize:true,removeHs:false}));if(!mol||!mol.is_valid())throw Error('invalid');if(mol.get_num_atoms()>128)throw Error('too_large');mol.set_new_coords(false);const svg=mol.get_svg(300,210);if(svg.length>524288)throw Error('too_large');self.postMessage({id:data.id,status:'ready',svg,atoms:mol.get_num_atoms(),version:rdkit.version()});}catch(e){self.postMessage({id:data.id,status:e instanceof Error&&['too_large','unsupported'].includes(e.message)?e.message:'invalid'});}finally{if(mol)mol.delete();}};

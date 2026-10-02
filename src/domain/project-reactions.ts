@@ -1,3 +1,4 @@
+import {chemicalIdentity} from './chemical-fields';
 import {classifyGraph,type Filter} from './graph';import type {CaseVersion} from './research-case';import type {Evidence} from './contracts';
 export type ReactionIdentity={id:string;label:string;seed_version_id:string;definition:CaseVersion['payload'];reason:string;created_by?:string;created_at?:string};
 export type ReactionMapping={id:string;identity_id:string;case_version_id:string;revision:number;decision:'include'|'exclude';mapping:{source:string;target:string}[];reason:string;created_by?:string;created_at?:string};
@@ -10,7 +11,7 @@ function latest<T extends {revision:number}>(rows:T[]){return rows.reduce<T|null
 export function validReactionMapping(definition:CaseVersion['payload'],payload:CaseVersion['payload'],mapping:ReactionMapping['mapping']){
  if(definition.claim.scope!==payload.claim.scope||definition.reaction.representation_scope!==payload.reaction.representation_scope||mapping.length!==definition.compounds.length||mapping.length!==payload.compounds.length||new Set(mapping.map(m=>m.source)).size!==mapping.length||new Set(mapping.map(m=>m.target)).size!==mapping.length)return false;
  const keys=['node_type','structure_context','stereochemistry','protonation','formula','charge'] as const;
- if(mapping.some(m=>{const a=payload.compounds.find(c=>c.id===m.source),b=definition.compounds.find(c=>c.id===m.target);return !a||!b||keys.some(k=>a[k]!==b[k]);}))return false;
+ if(mapping.some(m=>{const a=payload.compounds.find(c=>c.id===m.source),b=definition.compounds.find(c=>c.id===m.target);return !a||!b||keys.some(k=>a[k]!==b[k])||JSON.stringify(chemicalIdentity(a.structure))!==JSON.stringify(chemicalIdentity(b.structure));}))return false;
  const parts=(p:CaseVersion['payload'],mapped:boolean)=>p.reaction.participants.map(x=>JSON.stringify([mapped?mapping.find(m=>m.source===x.compound_id)?.target:x.compound_id,x.role,x.coefficient])).sort();
  return JSON.stringify(parts(definition,false))===JSON.stringify(parts(payload,true));
 }

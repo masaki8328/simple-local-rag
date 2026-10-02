@@ -70,3 +70,9 @@ node --import tsx scripts/project-review-fixture.ts | docker exec -i "$kg_contai
 # Bounded research request/result and question lifecycle.
 docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/migrations/20261002140245_research_handoff.sql
 node --import tsx scripts/handoff-fixture.ts | docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres
+
+# Explicit opt-in local SQL review proposal, not part of migration history or hosted rollout.
+if [ "${KG_CHEMICAL_PROPOSAL:-0}" = "1" ]; then
+ docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/proposals/chemical-fields.sql
+ node --import tsx scripts/chemical-fields-fixture.ts | docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres
+fi

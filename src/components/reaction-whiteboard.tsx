@@ -24,7 +24,7 @@ export function ReactionWhiteboard({project,data}:{project:string;data:ProjectRe
  {select('review','人による科学レビュー',[['accepted','採用された改訂'],['all','すべて（未採用は接続なし）'],['pending','未採用のみ（接続なし）']])}
  </div><p>指定範囲に報告範囲全体が収まる場合だけ一致します。単位・基準は完全一致で換算せず、不明・未報告・重複は条件不明として残します。pH を濃度に換算しません。名称で基質を推測・統合しません。</p><button className="secondary" onClick={()=>setOptions(boardDefaults)}>条件をリセット</button></details>
  {invalidBoardRange(options)&&<p role="alert">数値範囲を確認してください。下限は上限以下、濃度は非負で指定してください。</p>}
- <NetworkCanvas links={data.compoundLinks} rows={rows} onSelect={setSelected}/>
+ <NetworkCanvas project={project} links={data.compoundLinks} rows={rows} onSelect={setSelected}/>
  {!rows.length&&<p>この表示条件に該当する記録はありません。</p>}
  {active&&<SourcePanel project={project} data={data} row={active}/>}
  <details><summary>グラフの根拠一覧（キーボード・詳細表示）</summary>{rows.map(r=><article key={r.key} id={`reaction-${r.identity.id}`}><h3>{r.identity.label} · {groups[r.group]}</h3><p>表示: {r.projection.line_style} · 支持 {r.projection.support_evidence_ids.length} · 反証 {r.projection.refute_evidence_ids.length} · 条件不明 {r.projection.unknown_count} · 条件除外 {r.projection.excluded_count}</p><button onClick={()=>setSelected(r.key)}>出典パネルを開く: {r.identity.label}</button></article>)}</details>

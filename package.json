@@ -13,9 +13,14 @@
     "test:smoke": "tsx scripts/smoke.ts",
     "lint": "eslint .",
     "test:app": "node --conditions=react-server --import tsx --test tests/app/*.test.ts",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "chemistry:assets": "node scripts/prepare-chemistry-assets.mjs",
+    "prebuild": "npm run chemistry:assets",
+    "predev": "npm run chemistry:assets",
+    "pretest:browser": "npm run chemistry:assets"
   },
   "dependencies": {
+    "@rdkit/rdkit": "2026.3.6",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.117.2",
     "next": "16.3.8",

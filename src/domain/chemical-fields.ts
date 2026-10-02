@@ -1,0 +1,10 @@
+import {z} from 'zod';
+const text=(n:number)=>z.string().trim().min(1).max(n).nullable();
+export function validCAS(value:string){if(!/^\d{2,7}-\d{2}-\d$/.test(value))return false;const digits=value.replaceAll('-','');return [...digits.slice(0,-1)].reverse().reduce((n,d,i)=>n+Number(d)*(i+1),0)%10===Number(digits.at(-1));}
+export const chemicalStructure=z.strictObject({schema_version:z.literal('chemical-structure/0.1'),smiles:text(4096),inchi:z.string().max(4096).regex(/^InChI=1S?\/[^\s<>]+$/).nullable(),cas:z.string().refine(validCAS,'Invalid CAS check digit').nullable(),representation:z.enum(['ground_state','transition_state','unknown']),source_anchor_id:z.uuid().nullable(),attribution:z.enum(['authors','analyst','not_reported'])});
+export const reactionDescription=z.strictObject({schema_version:z.literal('reaction-description/0.1'),reaction_type:text(200),reversibility:z.enum(['reversible','irreversible','unknown']),description:text(8000),source_anchor_id:z.uuid().nullable(),attribution:z.enum(['authors','analyst','not_reported'])});
+export const emptyChemicalStructure=()=>({schema_version:'chemical-structure/0.1' as const,smiles:null,inchi:null,cas:null,representation:'unknown' as const,source_anchor_id:null,attribution:'not_reported' as const});
+export const emptyReactionDescription=()=>({schema_version:'reaction-description/0.1' as const,reaction_type:null,reversibility:'unknown' as const,description:null,source_anchor_id:null,attribution:'not_reported' as const});
+// Syntax/resource prefilter only. RDKit sanitization is required before depiction.
+export function depictionInput(smiles:unknown):'missing'|'too_large'|'unsupported'|'ready'{if(smiles==null||smiles==='')return 'missing';if(typeof smiles!=='string')return 'unsupported';if(smiles.length>1024)return 'too_large';return /^[A-Za-z0-9@+\-\[\]()\\/%=#$:.*]+$/.test(smiles)?'ready':'unsupported';}
+export function chemicalIdentity(s?:z.infer<typeof chemicalStructure>){return [s?.smiles??null,s?.inchi??null,s?.cas??null,s?.representation??'unknown'];}
