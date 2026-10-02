@@ -42,3 +42,7 @@ Reviewed chemical proposal was promoted byte-for-byte using Supabase CLI `migrat
 ## Root-reported chemical fields application — 2026-10-02
 
 Root reports successful live application as hosted `20261002153431 / chemical_fields`, corresponding to local `20261002150903_chemical_fields.sql` with the exact SHA-256 above. This supersedes the earlier local-only status. Do not replay. No hosted mutation, credential or access change was performed by this executor. Acquisition SQL remains under final review; publication is pending that review.
+
+## Reviewed acquisition loop promotion — 2026-10-02
+
+Root returned GO with no material blockers. Supabase CLI `migration new literature_acquisition_loop` generated `20261002153807_literature_acquisition_loop.sql`; its bytes are identical to retained `supabase/proposals/literature-loop.sql`, SHA-256 `f14098ac47420eea8be3676ec2da59edd2d5098f0400bd8a2a981b7979027bb9`. This supersedes the pending-review status above. The acquisition migration has not been applied live by this executor and has no hosted version assigned here. Root will handle hosted application and main promotion. Publication of the reviewed branch is authorized; credential setup remains user-blocked.
