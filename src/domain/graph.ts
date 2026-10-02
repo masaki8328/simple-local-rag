@@ -1,15 +1,17 @@
 import type {Bundle, Claim, Condition, Evidence, Reaction} from './contracts';
 import {publishable,conditionIssue} from './contracts';
-export type Filter = {key:string; dimension:string; basis:string; unit:string; max?:number; max_inclusive?:boolean; terms?:string[]; only?:boolean};
+export type Filter = {key:string; dimension:string; basis:string; unit:string; min?:number; min_inclusive?:boolean; max?:number; max_inclusive?:boolean; terms?:string[]; only?:boolean};
 export type Match = 'matched'|'excluded'|'unknown';
 function conditionMatches(c:Condition, f:Filter):Match {
   if(conditionIssue(c)) return 'unknown';
   if(c.value_state==='not_applicable') return 'excluded';
   if(c.value_state!=='reported') return 'unknown';
   if(c.dimension!==f.dimension || c.basis!==f.basis || c.unit!==f.unit) return 'unknown';
-  if(f.max!==undefined) {
-    if(c.kind!=='interval' || c.upper===null) return 'unknown';
-    return c.upper<f.max || (c.upper===f.max && (f.max_inclusive!==false || !c.upper_inclusive)) ? 'matched':'excluded';
+  if(f.min!==undefined || f.max!==undefined) {
+    if(c.kind!=='interval' || (f.min!==undefined&&c.lower===null) || (f.max!==undefined&&c.upper===null)) return 'unknown';
+    const lower=f.min===undefined || c.lower!>f.min || (c.lower===f.min&&(f.min_inclusive!==false||!c.lower_inclusive));
+    const upper=f.max===undefined || c.upper!<f.max || (c.upper===f.max&&(f.max_inclusive!==false||!c.upper_inclusive));
+    return lower&&upper?'matched':'excluded';
   }
   if(f.terms) {
     if(c.kind==='interval') return 'unknown';
