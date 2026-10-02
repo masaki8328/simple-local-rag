@@ -1,5 +1,7 @@
 # Architecture decision record — reviewed design v0.1
 
+Task 2 implementation update: see [Auth-ready workflow and revised mutation privileges](task2-setup.md). The Phase 1/C1 baseline below is retained as a design record.
+
 2026-10-02. PM: dot. Implementation/test owner: Codex. This document records the approved boundaries and scientific contracts; it is not a claim that C2/D or cloud integrations are implemented.
 
 ## Decision and implementation boundary

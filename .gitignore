@@ -21,3 +21,6 @@ uploads/
 exports/
 analysis-output/
 .supabase/
+# Local browser test output; never research exports
+playwright-report/
+test-results/

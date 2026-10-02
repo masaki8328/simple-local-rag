@@ -1,0 +1,4 @@
+import Link from 'next/link';
+import {AppError,errorMessage} from '../application/models';
+export function AccessState({error}:{error:unknown}){const code=error instanceof AppError?error.code:'UNAVAILABLE';return <section className="panel" role="status"><p className="eyebrow">PRIVATE RESEARCH WORKSPACE</p><h1>{code==='CONFIGURATION'?'設定が必要です':code==='UNAUTHENTICATED'?'ログインが必要です':'アクセスを確認してください'}</h1><p>{errorMessage[code]}</p>{code==='CONFIGURATION'?<><p>Supabase の接続先と公開用キーがまだ設定されていません。研究データは読み書きされません。</p><p>管理者向けの設定手順はリポジトリの Task 2 setup 文書にあります。秘密情報をチャットへ送らないでください。</p><Link href="/demo">架空データのデモを見る</Link></>:<Link href={code==='UNAUTHENTICATED'?'/login':'/projects'}>{code==='UNAUTHENTICATED'?'ログインへ':'プロジェクト一覧へ'}</Link>}</section>;}
+export function Header(){return <header><Link href="/projects" className="brand">糖類アルカリ反応 <span>Research workspace</span></Link><Link href="/demo">架空データのデモ</Link></header>;}

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {setTimeout} from 'node:timers/promises';
 async function main() {
 const port=3187;
-const child=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port',String(port)],{env:{...process.env,NEXT_TELEMETRY_DISABLED:'1'},stdio:'pipe'});
+const child=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port',String(port)],{env:{...process.env,NEXT_TELEMETRY_DISABLED:'1',NEXT_PUBLIC_SUPABASE_URL:'',NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:''},stdio:'pipe'});
 let output='';child.stdout.on('data',c=>output+=c);child.stderr.on('data',c=>output+=c);
 try {
  let ready=false;
@@ -13,7 +13,11 @@ try {
   await setTimeout(100);
  }
  assert.ok(ready,'production server became ready');
- for(const [path,style] of [['/','solid'],['/?temperature=120','dashed']]) {
+ const configPage=await fetch(`http://127.0.0.1:${port}/projects`);
+ assert.ok((await configPage.text()).includes('設定が必要です'));
+ assert.ok(configPage.headers.get('cache-control')?.includes('no-store'));
+ console.log('PASS: unconfigured workspace fails closed with private no-store response');
+ for(const [path,style] of [['/demo','solid'],['/demo?temperature=120','dashed']]) {
   const r=await fetch(`http://127.0.0.1:${port}${path}`);
   assert.equal(r.status,200);
   const html=await r.text();

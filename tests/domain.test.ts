@@ -5,7 +5,7 @@ import {z} from 'zod';
 import {analysisSchema,publishable,sameSpecies} from '../src/domain/contracts';
 import {classifyGraph,matchBundle} from '../src/domain/graph';
 import {digest,planImport,validateAnalysis,parseAnalysisJson} from '../src/domain/import';
-import {fixture,target,lowTemperature,temperature,bundle,evidence} from './fixtures/synthetic';
+import {fixture,target,lowTemperature,temperature,bundle} from './fixtures/synthetic';
 const input=()=>{const a=fixture();return {reaction:a.reactions[0],claim:a.claims[0],evidence:a.evidence,bundles:a.condition_bundles,filters:[lowTemperature]};};
 test('valid synthetic analysis and generated JSON contract agree',()=>{assert.equal(validateAnalysis(fixture(),target).schema_version,'0.1.0');assert.deepEqual(JSON.parse(readFileSync('contracts/analysis-v0.1.schema.json','utf8')),z.toJSONSchema(analysisSchema));});
 test('multiple reactants/products and unknown coefficients survive graph projection',()=>{const r=classifyGraph(input());assert.equal(r.participants.length,4);assert.equal(r.participants[3].coefficient,null);assert.ok(publishable(input().reaction));});

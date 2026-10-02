@@ -1,5 +1,7 @@
 # Data dictionary v0.1
 
+Task 2 implementation update: see [Auth-ready workflow and revised mutation privileges](task2-setup.md). The Phase 1/C1 baseline below is retained as a design record.
+
 ## C1 physical baseline
 
 PKs are UUID; timestamps are timestamptz; scientific parent links use `(project_id,id)`; deletes are not granted and references use NO ACTION. Defaults never invent scientific observations. See the migration for exact nullability/checks.

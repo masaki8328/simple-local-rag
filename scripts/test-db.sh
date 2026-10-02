@@ -11,3 +11,6 @@ done
 docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres < tests/db-bootstrap.sql
 docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres < supabase/migrations/202610020001_c1_baseline.sql
 docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres < tests/c1-rls.sql
+docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres < supabase/migrations/202610020002_project_paper_workflow.sql
+docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres < tests/task2-workflow.sql
+python scripts/test-db-concurrency.py "$kg_container"
