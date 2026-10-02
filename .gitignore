@@ -5,3 +5,19 @@ venv/*
 .ipynb_checkpoints/* 
 
 text_chunks_and_embeddings_df.csv
+# Application dependencies and generated output
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+# Private inputs and credentials must never enter Git
+.env*
+!.env.example
+*.pdf
+*.pem
+*.key
+private-data/
+uploads/
+exports/
+analysis-output/
+.supabase/

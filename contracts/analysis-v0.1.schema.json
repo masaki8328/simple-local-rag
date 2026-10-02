@@ -1,0 +1,738 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "project_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "paper_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "input_document_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "analysis_run": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "adapter": {
+          "type": "string",
+          "const": "dot_manual_json"
+        },
+        "protocol_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        }
+      },
+      "required": [
+        "id",
+        "adapter",
+        "protocol_version",
+        "created_at"
+      ],
+      "additionalProperties": false
+    },
+    "studies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "origin_paper_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "independence_group_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_status": {
+            "type": "string",
+            "enum": [
+              "original",
+              "secondary_report",
+              "unresolved"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "origin_paper_id",
+          "independence_group_id",
+          "source_status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "experiments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "study_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "original_experiment_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_anchor_id": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "id",
+          "study_id",
+          "original_experiment_id",
+          "source_anchor_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "compounds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "node_type": {
+            "type": "string",
+            "enum": [
+              "discrete_molecule",
+              "intermediate",
+              "polymer",
+              "polymer_site",
+              "mixture",
+              "class"
+            ]
+          },
+          "structure_scope": {
+            "type": "string"
+          },
+          "epistemic_status": {
+            "type": "string",
+            "enum": [
+              "observed",
+              "hypothetical",
+              "unspecified"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "node_type",
+          "structure_scope",
+          "epistemic_status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "reactions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "representation_scope": {
+            "type": "string",
+            "enum": [
+              "net_conversion",
+              "elementary_step",
+              "pathway_segment"
+            ]
+          },
+          "equation_balance_status": {
+            "type": "string",
+            "enum": [
+              "checked",
+              "unchecked",
+              "not_applicable",
+              "unknown"
+            ]
+          },
+          "product_inventory_status": {
+            "type": "string",
+            "enum": [
+              "complete",
+              "partial",
+              "unknown"
+            ]
+          },
+          "participants": {
+            "minItems": 2,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "compound_version_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "reactant",
+                    "product",
+                    "formal_auxiliary"
+                  ]
+                },
+                "coefficient": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "primary_for_display": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "compound_version_id",
+                "role",
+                "coefficient",
+                "primary_for_display"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "representation_scope",
+          "equation_balance_status",
+          "product_inventory_status",
+          "participants"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reaction_version_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "product_presence",
+              "net_conversion",
+              "intermediate_presence",
+              "elementary_mechanism",
+              "pathway",
+              "order_of_steps"
+            ]
+          },
+          "proposition": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "id",
+          "reaction_version_id",
+          "scope",
+          "proposition"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "condition_bundles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "experiment_version_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "reaction",
+              "pretreatment",
+              "workup",
+              "analysis"
+            ]
+          },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "experiment",
+              "reported_applicability"
+            ]
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "dimension": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "basis": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "value_state": {
+                  "type": "string",
+                  "enum": [
+                    "reported",
+                    "not_reported",
+                    "unknown",
+                    "not_applicable",
+                    "ambiguous"
+                  ]
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "interval",
+                    "controlled_term",
+                    "composition"
+                  ]
+                },
+                "lower": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "upper": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "lower_inclusive": {
+                  "type": "boolean"
+                },
+                "upper_inclusive": {
+                  "type": "boolean"
+                },
+                "terms": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "inventory_complete": {
+                  "type": "boolean"
+                },
+                "raw_value_text": {
+                  "type": "string"
+                },
+                "raw_unit": {
+                  "type": "string"
+                },
+                "derivation": {
+                  "type": "string",
+                  "enum": [
+                    "reported",
+                    "calculated"
+                  ]
+                },
+                "calculation": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "key",
+                "dimension",
+                "basis",
+                "unit",
+                "value_state",
+                "kind",
+                "lower",
+                "upper",
+                "lower_inclusive",
+                "upper_inclusive",
+                "terms",
+                "inventory_complete",
+                "raw_value_text",
+                "raw_unit",
+                "derivation",
+                "calculation"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "experiment_version_id",
+          "stage",
+          "basis",
+          "values"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "anchors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "paper_document_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "document_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "physical_page_start": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "physical_page_end": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "passage": {
+            "type": "string",
+            "minLength": 1
+          },
+          "passage_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "id",
+          "paper_document_id",
+          "document_sha256",
+          "physical_page_start",
+          "physical_page_end",
+          "passage",
+          "passage_hash"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "claim_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reporting_paper_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "condition_bundle_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "original_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "independence_group_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "origin_resolution_status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "unresolved"
+            ]
+          },
+          "stance": {
+            "type": "string",
+            "enum": [
+              "supports",
+              "refutes",
+              "inconclusive"
+            ]
+          },
+          "evidence_type": {
+            "type": "string",
+            "enum": [
+              "directly_observed",
+              "strongly_supported",
+              "proposed",
+              "adopted_from_prior_literature",
+              "speculative"
+            ]
+          },
+          "strength_assessment": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low",
+              "unassessed"
+            ]
+          },
+          "current_assertion_status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "superseded",
+              "withdrawn"
+            ]
+          },
+          "measured_scope": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "product_presence",
+                  "net_conversion",
+                  "intermediate_presence",
+                  "elementary_mechanism",
+                  "pathway",
+                  "order_of_steps"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "strength_rationale": {
+            "type": "string",
+            "minLength": 1
+          },
+          "review_state": {
+            "type": "string",
+            "const": "ai_generated"
+          },
+          "epistemic_origin": {
+            "type": "string",
+            "enum": [
+              "experiment_report",
+              "authors_interpretation",
+              "cited_interpretation",
+              "analyst_inference"
+            ]
+          },
+          "source_access": {
+            "type": "string",
+            "enum": [
+              "fulltext",
+              "abstract_only",
+              "secondary_only",
+              "unavailable"
+            ]
+          },
+          "extraction_confidence": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_anchor_ids": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "dependency_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "alternatives_tested": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "claim_id",
+          "reporting_paper_id",
+          "condition_bundle_id",
+          "original_experiment_id",
+          "independence_group_id",
+          "origin_resolution_status",
+          "stance",
+          "evidence_type",
+          "strength_assessment",
+          "current_assertion_status",
+          "measured_scope",
+          "strength_rationale",
+          "review_state",
+          "epistemic_origin",
+          "source_access",
+          "extraction_confidence",
+          "source_anchor_ids",
+          "dependency_ids",
+          "alternatives_tested",
+          "limitations"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "uncertainties": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "research_question_candidates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "project_id",
+    "paper_id",
+    "input_document_sha256",
+    "analysis_run",
+    "studies",
+    "experiments",
+    "compounds",
+    "reactions",
+    "claims",
+    "condition_bundles",
+    "anchors",
+    "evidence",
+    "uncertainties",
+    "research_question_candidates"
+  ],
+  "additionalProperties": false
+}
