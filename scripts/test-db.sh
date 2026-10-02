@@ -45,3 +45,4 @@ python scripts/test-research-concurrency.py "$kg_container"
 docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres < supabase/migrations/20261002060000_drive_receipts.sql
 docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres < tests/task5-drive.sql
 python scripts/test-drive-concurrency.py "$kg_container"
+node --conditions=react-server --import tsx scripts/drive-worker-preflight.ts | docker exec -i "$kg_container" psql -X -v ON_ERROR_STOP=1 -U bootstrap_admin -d postgres

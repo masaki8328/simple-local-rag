@@ -26,7 +26,7 @@ Private download source checks re-stream/hash the recorded revision and compare 
 
 ## Closed integration boundaries
 
-Production Drive service and `/api/drive` fail closed before consuming a body. OAuth preparation has cryptographic state/PKCE and an injected one-time state-store contract; no callback, exchange, refresh vault or account-binding endpoint is routed. The database repository, session vault and verified-JWT worker transport remain explicit interfaces awaiting secure integration. The mock component harness is not part of the application. No environment flag can activate this candidate.
+Production Drive service and `/api/drive` fail closed before consuming a body. OAuth preparation has cryptographic state/PKCE and an injected one-time state-store contract; no callback, exchange, refresh vault or account-binding endpoint is routed. The SQL repository, independently verified JWT worker transport and explicit server composition are now implemented locally; see [wiring review](task5-wiring-review.md). Secure token/state/session stores remain interfaces awaiting implementation and provisioning. The mock component harness is not part of the application. No environment flag can activate this candidate.
 
 Both legacy Storage HTTP endpoints permanently return 410. Production paper/queue UI uses the disabled Drive control and does not call legacy upload-intent/page-count queries. Historical Storage code/tests remain as superseded regression artifacts.
 
